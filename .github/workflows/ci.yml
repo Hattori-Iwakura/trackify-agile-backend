@@ -59,11 +59,26 @@ jobs:
           name: coverage
           path: coverage/
 
+      - name: Install SonarScanner
+        shell: powershell
+        run: |
+          $env:Path += ";$env:USERPROFILE\.dotnet\tools"
+          dotnet tool install --global dotnet-sonarscanner 2>$null
+          if (!(Get-Command sonar-scanner -ErrorAction SilentlyContinue)) {
+            $version = "7.0.2.4839"
+            $url = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$version-windows-x64.zip"
+            Invoke-WebRequest -Uri $url -OutFile sonar-scanner.zip
+            Expand-Archive -Path sonar-scanner.zip -DestinationPath $env:RUNNER_TEMP -Force
+            echo "$env:RUNNER_TEMP\sonar-scanner-$version-windows-x64\bin" >> $env:GITHUB_PATH
+          }
+
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v5
+        shell: powershell
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          sonar-scanner -D"sonar.token=$env:SONAR_TOKEN" -D"sonar.host.url=$env:SONAR_HOST_URL"
 
   docker:
     name: Build & Push Docker Image
