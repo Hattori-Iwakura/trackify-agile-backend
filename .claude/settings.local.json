@@ -10,7 +10,10 @@
       "Bash(cd \"C:\\\\Users\\\\ASUS\\\\OneDrive\\\\Documents\\\\GitHub\\\\trackify-agile-backend\" && npx nest build 2>&1)",
       "Bash(cd \"C:\\\\Users\\\\ASUS\\\\OneDrive\\\\Documents\\\\GitHub\\\\trackify-agile-backend\" && npm test 2>&1)",
       "Bash(cd \"C:\\\\Users\\\\ASUS\\\\OneDrive\\\\Documents\\\\GitHub\\\\trackify-agile-backend\" && docker build -t trackify-backend:dev . 2>&1)",
-      "Bash(docker image:*)"
+      "Bash(docker image:*)",
+      "Bash(cd \"C:\\\\Users\\\\ASUS\\\\OneDrive\\\\Documents\\\\GitHub\\\\trackify-agile-backend\" && npm run test:e2e 2>&1)",
+      "Bash(cd \"C:\\\\Users\\\\ASUS\\\\OneDrive\\\\Documents\\\\GitHub\\\\trackify-agile-backend\" && npm test 2>&1 && npm run test:e2e 2>&1)",
+      "Bash(cd \"C:\\\\Users\\\\ASUS\\\\OneDrive\\\\Documents\\\\GitHub\\\\trackify-agile-backend\" && node -e \"try { require\\('@nestjs/platform-express'\\); console.log\\('OK'\\); } catch\\(e\\) { console.log\\(e.message\\); }\")"
     ]
   }
 }
