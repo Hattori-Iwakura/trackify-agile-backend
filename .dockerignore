@@ -1,0 +1,12 @@
+node_modules
+dist
+generated
+coverage
+.git
+.github
+.env
+.env.*
+!.env.example
+*.md
+.vscode
+.idea
