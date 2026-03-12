@@ -38,3 +38,6 @@ coverage/
 Thumbs.db
 
 /generated/prisma
+
+# Internal docs
+docs/
