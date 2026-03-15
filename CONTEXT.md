@@ -1,0 +1,325 @@
+# Trackify Agile — Shared AI Agent Context
+
+> **This file is the single source of truth for ALL AI agents working on this project.**
+> It is committed to git so every teammate's agent stays aligned.
+> Last updated: 2026-03-14 (Session: Shared Agent Context Setup)
+
+---
+
+## 1. Project Overview
+
+- **Project**: Trackify Agile — Web-based Agile Issue Tracker (University Graduation Project)
+- **GitHub Workspace**: `anitygravity`
+- **Team**: 7 members — 6 Backend (BE1–BE6), 1 Frontend (FE1)
+- **Grading Focus**: SDLC Environment, CI/CD pipelines, Tooling, and DevOps — NOT complex product features
+- **Architecture**: Polyrepo
+  - **This repo**: Backend only (NestJS)
+  - **Separate repo**: Frontend (NextJS)
+  - **Separate repo**: Infrastructure (Docker Compose, Nginx, n8n)
+
+---
+
+## 2. Tech Stack (STRICT — No Substitutions)
+
+### Backend (this repo)
+
+| Layer | Technology | Notes |
+|---|---|---|
+| Framework | **NestJS** (TypeScript) | Modular architecture (controllers, services, modules) |
+| ORM | **Prisma v7** | All database access — no raw SQL unless absolutely necessary |
+| Database | **PostgreSQL** | `trackify_db` on `postgres-app:5432` (hosted in infra repo) |
+| Validation | **Zod** | Request validation via custom `ZodValidationPipe` in `src/common/pipes/` |
+| API Docs | **Swagger / OpenAPI** | Auto-generated from NestJS decorators — every endpoint MUST have them |
+| Testing | **Jest** | Unit (`.spec.ts`) + E2E (`.e2e-spec.ts`) |
+| File Upload | **Multer** | Via `@nestjs/platform-express` — required for file handling tasks |
+| Real-time | **Socket.io** | Via `@nestjs/websockets` — required for real-time tasks |
+
+### Frontend (separate repo — for reference only)
+
+| Layer | Technology |
+|---|---|
+| Framework | **NextJS** (App Router) — **NOT Angular** |
+| Validation | **Zod** (shared schema contracts with backend) |
+| Forms | **React Hook Form** + Zod resolvers |
+
+### DevOps & Infrastructure
+
+| Tool | Purpose |
+|---|---|
+| **GitHub Actions** | CI/CD pipeline (test, scan, build, push) |
+| **SonarQube** | Code quality gates — server at port `9000` |
+| **Docker** | Multi-stage `node:20-alpine` builds |
+| **n8n** | Workflow automation at port `5678` — syncs GitHub branches with Trello |
+| **Nginx** | Reverse proxy routing between frontend and backend containers |
+
+### Infrastructure Context
+
+- **Docker Network**: `agile_network` (custom bridge) — backend container MUST join this network
+- **App Database**: host `postgres-app`, port `5432`, database `trackify_db`
+- **SonarQube DB**: `postgres-sonar` (separate instance)
+- **Prisma v7 note**: Connection URL is in `prisma.config.ts`, NOT in `schema.prisma` datasource block
+
+---
+
+## 3. Academic Requirements (MANDATORY)
+
+These rules exist to satisfy university grading criteria. They are **NON-NEGOTIABLE**.
+
+### Rule: File Handling → Multer
+
+> **IF** a task involves uploading, storing, or processing files (user avatars, issue attachments, profile images, documents)
+> **THEN** you MUST implement it using **Multer** via `@nestjs/platform-express`.
+
+- Use `@UseInterceptors(FileInterceptor(...))` in controllers
+- Configure `diskStorage` or `memoryStorage` with proper file filters
+- Validate file type (MIME) and size limits
+- Store upload metadata (filename, mimeType, size) in the database via Prisma
+- BE1 owns the shared `UploadModule`, BE3 imports it for issue attachments
+
+### Rule: Real-time Updates → Socket.io
+
+> **IF** a task involves real-time updates (Kanban board sync, live comments, push notifications)
+> **THEN** you MUST implement it using **`@nestjs/websockets`** with **Socket.io**.
+
+- Create `@WebSocketGateway()` classes
+- Authenticate WebSocket connections via JWT in the handshake
+- Use rooms for scoping: `project:{id}`, `issue:{key}`, `user:{id}`
+- Emit events from services via injected gateway reference
+- BE5 owns the WebSocket gateway, BE3/BE4 trigger events through it
+
+---
+
+## 4. Module Ownership
+
+> **Each dev works ONLY within their `src/<module>/` directory to avoid merge conflicts.**
+
+| Dev | Module Directory | Scope |
+|---|---|---|
+| **BE1** | `src/auth/`, `src/users/`, `src/upload/` | Authentication (JWT), user profiles, **Multer shared module** |
+| **BE2** | `src/projects/` | Project CRUD, RBAC guards, members, labels/tags |
+| **BE3** | `src/issues/` | Issue CRUD, Kanban board API, **issue attachments (Multer)**, filter/search |
+| **BE4** | `src/sprints/`, `src/comments/` | Sprint lifecycle, backlog, comments with threading |
+| **BE5** | `src/notifications/` | **WebSocket gateway (Socket.io)**, in-app notifications, real-time events |
+| **BE6** | `src/common/`, `src/config/`, `src/health/`, `prisma/`, DevOps | Prisma schema, CI/CD, Docker, SonarQube, shared pipes/filters/interceptors |
+
+### Cross-module dependencies
+
+| Feature | Primary Owner | Depends On |
+|---|---|---|
+| Upload Avatar (Multer) | BE1 | — |
+| Upload Attachments (Multer) | BE3 | BE1 (`UploadModule`) |
+| RBAC Guards | BE2 | — (other modules import guards) |
+| Kanban Board WebSocket | BE3 → BE5 | BE3 triggers, BE5 emits |
+| Live Comments WebSocket | BE4 → BE5 | BE4 triggers, BE5 emits |
+| Notifications WebSocket | BE5 | — |
+
+---
+
+## 5. NestJS Module Structure (Enforced)
+
+Every feature module MUST follow this structure:
+
+```
+src/<module>/
+  ├── <module>.module.ts          # Module definition
+  ├── <module>.controller.ts      # REST endpoints + Swagger decorators
+  ├── <module>.service.ts         # Business logic
+  ├── <module>.controller.spec.ts # Controller tests
+  ├── <module>.service.spec.ts    # Service tests
+  ├── dto/                        # Zod schemas + inferred types
+  │   ├── create-<entity>.dto.ts
+  │   └── update-<entity>.dto.ts
+  └── interfaces/                 # TypeScript interfaces (optional)
+      └── <entity>.interface.ts
+```
+
+---
+
+## 6. Code Conventions
+
+### 6.1 Validation (Zod)
+
+- Every request DTO MUST have a Zod schema
+- Use the shared `ZodValidationPipe` from `src/common/pipes/zod-validation.pipe.ts`
+- Export both the schema and the inferred type:
+
+```typescript
+export const CreateProjectSchema = z.object({
+  name: z.string().min(1).max(100),
+  key: z.string().min(2).max(10).toUpperCase(),
+  description: z.string().optional(),
+});
+export type CreateProjectDto = z.infer<typeof CreateProjectSchema>;
+```
+
+### 6.2 Swagger Decorators
+
+Every controller method MUST include:
+- `@ApiTags('module-name')`
+- `@ApiOperation({ summary: '...' })`
+- `@ApiResponse({ status: 2xx })` and `@ApiResponse({ status: 4xx })`
+- `@ApiBearerAuth()` for authenticated endpoints
+- `@ApiConsumes('multipart/form-data')` for file upload endpoints
+
+### 6.3 Testing
+
+- Every `.service.ts` → must have `.service.spec.ts`
+- Every `.controller.ts` → must have `.controller.spec.ts`
+- Every `.gateway.ts` → must have `.gateway.spec.ts`
+- Tests must be meaningful — they feed into **SonarQube coverage reports**
+- Target minimum **80% line coverage** per module
+
+### 6.4 API Response Format
+
+All responses are wrapped by `TransformInterceptor`:
+```json
+{
+  "statusCode": 200,
+  "data": { ... },
+  "timestamp": "2026-03-14T..."
+}
+```
+
+Error responses use `HttpExceptionFilter`:
+```json
+{
+  "statusCode": 400,
+  "timestamp": "2026-03-14T...",
+  "path": "/api/...",
+  "message": "..."
+}
+```
+
+### 6.5 Database Access
+
+- Use Prisma for ALL database access
+- No raw SQL unless absolutely necessary
+- All models use `@@map("table_name")` for snake_case table names
+- Relations use `onDelete: Cascade` or `onDelete: SetNull` as appropriate
+
+---
+
+## 7. Git Conventions
+
+| Convention | Format | Example |
+|---|---|---|
+| **Branch naming** | `feature/<task-number>-<feature-name>` | `feature/42-issue-crud` |
+| **PR title** | `[Task-ID] Short description` | `[TRK-42] Add issue CRUD endpoints` |
+| **Commit message** | `[Task-ID] prefix: description` | `[TRK-42] feat: add create issue endpoint` |
+
+- Conventional commit prefixes: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
+- One feature per branch — do not mix unrelated changes
+- PRs require at least 1 review before merge
+- Target branch for feature PRs: `develop`
+
+### n8n Automation
+
+- When a feature branch is **merged into `develop`**, n8n automatically moves the corresponding Trello task to **Done**
+- n8n matches the task number from the branch name — **incorrect branch names break the automation**
+
+---
+
+## 8. Current Project State
+
+### Installed Dependencies
+- `@nestjs/common`, `@nestjs/core`, `@nestjs/platform-express` (v11)
+- `@nestjs/swagger`, `@nestjs/config`
+- `@prisma/client` (v7.5), `prisma` (v7.5)
+- `zod`, `dotenv`, `rxjs`, `reflect-metadata`
+
+### Existing Modules & Files
+
+```
+src/
+  ├── main.ts                              # Swagger, global prefix /api, filters, interceptors
+  ├── app.module.ts                        # Root module: ConfigModule, PrismaModule, CommonModule
+  ├── app.controller.ts                    # Default GET /
+  ├── app.service.ts                       # Default service
+  ├── config/
+  │   └── env.validation.ts                # Zod-based .env validation
+  ├── prisma/
+  │   ├── prisma.module.ts                 # @Global PrismaModule
+  │   └── prisma.service.ts                # PrismaClient with lifecycle hooks
+  ├── common/
+  │   ├── common.module.ts                 # Common module
+  │   ├── pipes/
+  │   │   └── zod-validation.pipe.ts       # ZodValidationPipe
+  │   ├── filters/
+  │   │   └── http-exception.filter.ts     # Global exception filter
+  │   ├── interceptors/
+  │   │   ├── transform.interceptor.ts     # Response wrapper { statusCode, data, timestamp }
+  │   │   └── logging.interceptor.ts       # Request logger METHOD /url STATUS - Xms
+  │   └── dto/
+  │       └── pagination.dto.ts            # PaginationSchema + PaginatedResult<T>
+  └── health/
+      ├── health.controller.ts             # GET /api/health (DB check + uptime)
+      └── health.controller.spec.ts        # 2 tests
+
+prisma/
+  └── schema.prisma                        # Full schema: 9 models, 7 enums
+
+Other:
+  ├── Dockerfile                           # Multi-stage node:20-alpine
+  ├── prisma.config.ts                     # Prisma v7 config (DATABASE_URL here)
+  ├── .env.example                         # All env vars documented
+  └── .github/workflows/ci.yml            # CI pipeline
+```
+
+### Prisma Schema Models
+
+| Model | Table | Owner | Status |
+|---|---|---|---|
+| `User` | `users` | BE1 | Schema ready, no migration yet |
+| `Project` | `projects` | BE2 | Schema ready, no migration yet |
+| `ProjectMember` | `project_members` | BE2 | Schema ready, no migration yet |
+| `Label` | `labels` | BE2 | Schema ready, no migration yet |
+| `Issue` | `issues` | BE3 | Schema ready, no migration yet |
+| `IssueLabel` | `issue_labels` | BE3 | Schema ready, no migration yet |
+| `Attachment` | `attachments` | BE3 | Schema ready, no migration yet |
+| `Sprint` | `sprints` | BE4 | Schema ready, no migration yet |
+| `Comment` | `comments` | BE4 | Schema ready, no migration yet |
+| `Notification` | `notifications` | BE5 | Schema ready, no migration yet |
+
+### Enums
+`GlobalRole`, `ProjectRole`, `IssueStatus`, `Priority`, `IssueType`, `SprintStatus`, `NotificationType`
+
+### What's NOT Built Yet
+- [ ] Auth module (JWT, register, login) — BE1
+- [ ] Users module (profile, avatar upload) — BE1
+- [ ] Upload module (Multer shared) — BE1
+- [ ] Projects module (CRUD, RBAC, members, labels) — BE2
+- [ ] Issues module (CRUD, board, attachments, filter) — BE3
+- [ ] Sprints module (lifecycle, backlog) — BE4
+- [ ] Comments module (CRUD, threading) — BE4
+- [ ] Notifications module (WebSocket gateway, Socket.io) — BE5
+- [ ] Initial Prisma migration (`prisma migrate dev --name init`)
+- [ ] Seed data for development
+
+---
+
+## 9. Environment Variables
+
+See `.env.example` for the full list. Key variables:
+
+| Variable | Required | Default | Used By |
+|---|---|---|---|
+| `DATABASE_URL` | Yes | — | Prisma (in `prisma.config.ts`) |
+| `PORT` | No | `3000` | App |
+| `API_PREFIX` | No | `api` | App |
+| `NODE_ENV` | No | `development` | App |
+| `JWT_SECRET` | Yes (for auth) | — | BE1 |
+| `JWT_EXPIRES_IN` | No | `15m` | BE1 |
+| `JWT_REFRESH_SECRET` | Yes (for auth) | — | BE1 |
+| `JWT_REFRESH_EXPIRES_IN` | No | `7d` | BE1 |
+| `UPLOAD_DIR` | No | `./uploads` | BE1/BE3 |
+| `MAX_FILE_SIZE` | No | `5242880` | BE1/BE3 |
+
+---
+
+## 10. Session Reports
+
+Completed work sessions are documented in `docs/reports/`. Read the latest report to understand what changed recently.
+
+Current reports:
+- `docs/reports/2026-03-14-foundation-setup.md` — BE6 foundation layer setup
+- `docs/reports/2026-03-14-shared-agent-context.md` — Shared AI agent context system setup

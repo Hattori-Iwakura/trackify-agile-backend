@@ -1,55 +1,74 @@
-# Agile Issue Tracker (Trackify) — Backend Repository
+# Trackify Agile — Claude Code Instructions
 
-## Project Overview
+> **This file is for Claude Code ONLY.** It is gitignored.
+> For shared project rules, read `CONTEXT.md` (committed to git, used by all AI agents).
 
-- **Project**: Trackify — Agile Issue Tracker (Graduation Project)
-- **GitHub Workspace**: anitygravity
-- **Grading Focus**: SDLC Environment, CI/CD pipelines, Tooling, and DevOps practices (NOT complex product features)
-- **Architecture**: Polyrepo — this repo is strictly Backend only
-  - Frontend (Angular) → separate repo
-  - Infrastructure (Docker Compose, Nginx, n8n) → separate repo
+---
 
-## Infrastructure Context (from infra repo)
+## 1. Core Reference
 
-- **Docker Network**: `agile_network` (custom bridge) — backend container must join this network
-- **App Database**: `postgres-app` → host: `postgres-app`, port: `5432`, db: `trackify_db`
-- **SonarQube**: running on port `9000` (with its own `postgres-sonar` db)
-- **n8n**: workflow automation on port `5678`
-- **Nginx**: reverse proxy routing traffic between frontend and backend containers
+**Read `CONTEXT.md` FIRST** — it contains:
+- Tech stack, module ownership, code conventions
+- Current project state (files, schema, what's built vs not)
+- Git conventions and n8n automation rules
+- Academic requirements (Multer, Socket.io)
 
-## Tech Stack & Tooling
+Everything in `CONTEXT.md` applies here. The sections below are **Claude-specific additions**.
 
-- **Framework**: NestJS (TypeScript)
-- **Database**: PostgreSQL (`trackify_db` on `postgres-app:5432`, hosted in infra repo)
-- **ORM**: Prisma
-- **Validation**: Zod
-- **API Docs**: Swagger / OpenAPI (auto-generated)
-- **Testing**: Jest (Unit + E2E)
-- **Code Quality**: SonarQube (via SonarScanner, server at port 9000)
-- **Containerization**: Docker (multi-stage Node.js Alpine, highly optimized)
-- **CI/CD**: GitHub Actions
-  - Run tests
-  - SonarQube scanning
-  - Build Docker image
-  - Push to Docker Hub
+---
 
-## DevOps Goals
+## 2. Claude-Specific Directives
 
-1. Fully automated CI/CD pipeline via GitHub Actions
-2. SonarQube integration for code quality gates
-3. Optimized multi-stage Dockerfile for production
-4. Proper testing coverage (unit + e2e) with Jest
-5. Swagger/OpenAPI documentation auto-generated from NestJS decorators
+- Treat both `CLAUDE.md` and `CONTEXT.md` as **living documents** — update them when significant changes occur
+- When unsure about a requirement, ask — do not assume
+- Prioritize **working code with tests** over perfect architecture
+- Always consider the **6-person backend team** — avoid patterns that create cross-module dependencies
+- Document as code: Swagger decorators ARE the API documentation
 
-## Conventions
+---
 
-- Use Prisma for all database access (no raw SQL unless necessary)
-- Use Zod schemas for request validation
-- Follow NestJS module structure (controllers, services, modules)
-- Keep Dockerfile lean — multi-stage build with Alpine base
-- Backend container connects to `agile_network` to reach `postgres-app` and other services
+## 3. Session Reports (MANDATORY)
 
-## Directives
+> **After every completed work session**, generate a report file in `docs/reports/`.
 
-- Treat this `CLAUDE.md` as a living document — update it when significant changes occur
-- Maintain docs-as-code: document Dockerfile, CI/CD, and setup instructions as they are created
+**Naming**: `docs/reports/YYYY-MM-DD-<short-description>.md`
+
+**Template**:
+```markdown
+# Session Report — YYYY-MM-DD — <Short Title>
+
+## Summary
+Brief 1-2 sentence overview of what was accomplished.
+
+## Changes Made
+List every file created, modified, or deleted with a short description.
+
+## Packages Installed/Removed
+Table of any dependency changes.
+
+## Tests
+- Tests added and their results (pass/fail count).
+
+## Build Status
+Whether the project compiles successfully after changes.
+
+## Notes / Decisions
+Any architectural decisions, gotchas, or things the team should know.
+
+## Next Steps
+What should be done next based on this session's work.
+```
+
+After writing the report, **update `CONTEXT.md` section 10** to list the new report.
+
+---
+
+## 4. CONTEXT.md Maintenance (MANDATORY)
+
+> **After every completed work session**, update `CONTEXT.md` to reflect the current project state.
+
+What to update:
+- **Section 8 (Current Project State)**: Update file tree, module status, checklist
+- **Section 10 (Session Reports)**: Add the new report to the list
+- **Any other section** that was affected by the session's work (new packages, new env vars, etc.)
+- **Update the `Last updated` date** at the top of `CONTEXT.md`

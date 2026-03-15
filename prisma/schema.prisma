@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -10,4 +5,248 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum GlobalRole {
+  ADMIN
+  USER
+}
+
+enum ProjectRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum IssueStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+  CANCELLED
+}
+
+enum Priority {
+  LOWEST
+  LOW
+  MEDIUM
+  HIGH
+  HIGHEST
+}
+
+enum IssueType {
+  EPIC
+  STORY
+  TASK
+  BUG
+  SUBTASK
+}
+
+enum SprintStatus {
+  PLANNING
+  ACTIVE
+  COMPLETED
+}
+
+enum NotificationType {
+  ISSUE_ASSIGNED
+  ISSUE_STATUS_CHANGED
+  COMMENT_ADDED
+  MENTIONED
+  SPRINT_STARTED
+  SPRINT_COMPLETED
+  MEMBER_INVITED
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+/// BE1: Auth & Users module
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  password  String
+  fullName  String
+  avatarUrl String?
+  role      GlobalRole @default(USER)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  projectMembers ProjectMember[]
+  assignedIssues Issue[]         @relation("IssueAssignee")
+  reportedIssues Issue[]         @relation("IssueReporter")
+  comments       Comment[]
+  notifications  Notification[]
+  attachments    Attachment[]
+
+  @@map("users")
+}
+
+/// BE2: Projects & RBAC module
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  key         String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members ProjectMember[]
+  issues  Issue[]
+  sprints Sprint[]
+  labels  Label[]
+
+  @@map("projects")
+}
+
+/// BE2: Project membership with role
+model ProjectMember {
+  id        String      @id @default(uuid())
+  userId    String
+  projectId String
+  role      ProjectRole @default(MEMBER)
+  joinedAt  DateTime    @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@map("project_members")
+}
+
+/// BE2: Labels for issues
+model Label {
+  id        String @id @default(uuid())
+  name      String
+  color     String
+  projectId String
+
+  project Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  issues  IssueLabel[]
+
+  @@unique([name, projectId])
+  @@map("labels")
+}
+
+/// BE3: Issues core
+model Issue {
+  id          String      @id @default(uuid())
+  title       String
+  description String?
+  issueKey    String      @unique
+  issueNumber Int
+  status      IssueStatus @default(TODO)
+  priority    Priority    @default(MEDIUM)
+  type        IssueType   @default(TASK)
+  position    Int         @default(0)
+
+  projectId  String
+  assigneeId String?
+  reporterId String
+  sprintId   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee User?   @relation("IssueAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  reporter User    @relation("IssueReporter", fields: [reporterId], references: [id])
+  sprint   Sprint? @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+
+  labels      IssueLabel[]
+  attachments Attachment[]
+  comments    Comment[]
+
+  @@unique([projectId, issueNumber])
+  @@map("issues")
+}
+
+/// BE3: Many-to-many between Issue and Label
+model IssueLabel {
+  issueId String
+  labelId String
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([issueId, labelId])
+  @@map("issue_labels")
+}
+
+/// BE3: File attachments on issues (Multer)
+model Attachment {
+  id         String   @id @default(uuid())
+  filename   String
+  url        String
+  mimeType   String
+  size       Int
+  issueId    String
+  uploaderId String
+  createdAt  DateTime @default(now())
+
+  issue    Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  uploader User  @relation(fields: [uploaderId], references: [id])
+
+  @@map("attachments")
+}
+
+/// BE4: Sprints
+model Sprint {
+  id        String       @id @default(uuid())
+  name      String
+  goal      String?
+  status    SprintStatus @default(PLANNING)
+  startDate DateTime?
+  endDate   DateTime?
+  projectId String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  issues  Issue[]
+
+  @@map("sprints")
+}
+
+/// BE4: Comments on issues
+model Comment {
+  id       String  @id @default(uuid())
+  content  String
+  issueId  String
+  authorId String
+  parentId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  issue   Issue     @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  author  User      @relation(fields: [authorId], references: [id])
+  parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+}
+
+/// BE5: Notifications (real-time via Socket.io)
+model Notification {
+  id      String           @id @default(uuid())
+  type    NotificationType
+  title   String
+  message String
+  data    Json?
+  isRead  Boolean          @default(false)
+  userId  String
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
 }

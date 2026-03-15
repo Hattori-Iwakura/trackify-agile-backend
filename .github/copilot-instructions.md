@@ -1,0 +1,40 @@
+# GitHub Copilot Instructions — Trackify Agile Backend
+
+> **Read `CONTEXT.md` at the root of this repo FIRST before doing anything.**
+> It contains all project rules, module ownership, conventions, and current state.
+> This file exists so GitHub Copilot auto-loads the rules. The source of truth is `CONTEXT.md`.
+
+## Quick Reference
+
+- **Framework**: NestJS + Prisma v7 + PostgreSQL + Zod
+- **Validation**: Use `ZodValidationPipe` from `src/common/pipes/zod-validation.pipe.ts`
+- **API Docs**: Every endpoint MUST have Swagger decorators
+- **Testing**: Every service/controller MUST have a `.spec.ts` file (Jest)
+- **File uploads**: MUST use Multer (`@nestjs/platform-express`)
+- **Real-time**: MUST use Socket.io (`@nestjs/websockets`)
+- **Response format**: All responses wrapped in `{ statusCode, data, timestamp }`
+- **Global prefix**: `/api` — Swagger UI at `/api/docs`
+
+## Module Ownership (DO NOT touch other devs' modules)
+
+| Dev | Directories |
+|---|---|
+| BE1 | `src/auth/`, `src/users/`, `src/upload/` |
+| BE2 | `src/projects/` |
+| BE3 | `src/issues/` |
+| BE4 | `src/sprints/`, `src/comments/` |
+| BE5 | `src/notifications/` |
+| BE6 | `src/common/`, `src/config/`, `src/health/`, `prisma/`, DevOps |
+
+## Git Convention
+
+- Branch: `feature/<task-number>-<feature-name>`
+- PR title: `[Task-ID] Short description`
+- Commit: `[Task-ID] feat|fix|refactor|test|docs|chore: description`
+
+## Before Writing Code
+
+1. Read `CONTEXT.md` for full project context
+2. Check `docs/reports/` for the latest session report
+3. Check `prisma/schema.prisma` for the current data model
+4. Only work within YOUR assigned module directories

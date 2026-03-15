@@ -25,6 +25,7 @@ lerna-debug.log*
 
 # Claude Code
 .claude/
+CLAUDE.md
 
 # Testing
 coverage/
@@ -39,5 +40,6 @@ Thumbs.db
 
 /generated/prisma
 
-# Internal docs
-docs/
+# Internal docs (keep docs/reports/ tracked for AI agent context)
+docs/*
+!docs/reports/
