@@ -2,7 +2,7 @@
 
 > **This file is the single source of truth for ALL AI agents working on this project.**
 > It is committed to git so every teammate's agent stays aligned.
-> Last updated: 2026-03-14 (Session: Shared Agent Context Setup)
+> Last updated: 2026-03-15 (Session: TDD Contract Specs BE1–BE5)
 
 ---
 
@@ -255,6 +255,22 @@ src/
       ├── health.controller.ts             # GET /api/health (DB check + uptime)
       └── health.controller.spec.ts        # 2 tests
 
+test/
+  ├── app.e2e-spec.ts                      # App e2e test
+  ├── auth.e2e-spec.ts                     # Auth e2e (TDD contract — BE1)
+  ├── users.e2e-spec.ts                    # Users e2e (TDD contract — BE1)
+  ├── projects.e2e-spec.ts                 # Projects e2e (TDD contract — BE2)
+  ├── issues.e2e-spec.ts                   # Issues e2e (TDD contract — BE3)
+  ├── sprints.e2e-spec.ts                  # Sprints e2e (TDD contract — BE4)
+  ├── comments.e2e-spec.ts                 # Comments e2e (TDD contract — BE4)
+  ├── notifications.e2e-spec.ts            # Notifications e2e (TDD contract — BE5)
+  ├── jest-e2e.json                        # E2E Jest config
+  ├── __mocks__/
+  │   └── prisma-client.ts                 # Full Prisma mock (all 10 model delegates)
+  └── helpers/
+      ├── mock-prisma.helper.ts            # createMockPrismaService() factory
+      └── e2e-setup.helper.ts              # createE2EApp() shared e2e bootstrap
+
 prisma/
   └── schema.prisma                        # Full schema: 9 models, 7 enums
 
@@ -323,3 +339,5 @@ Completed work sessions are documented in `docs/reports/`. Read the latest repor
 Current reports:
 - `docs/reports/2026-03-14-foundation-setup.md` — BE6 foundation layer setup
 - `docs/reports/2026-03-14-shared-agent-context.md` — Shared AI agent context system setup
+- `docs/reports/2026-03-15-test-infrastructure-phase0.md` — Shared test infrastructure + BE6 common specs (26 tests)
+- `docs/reports/2026-03-15-tdd-contracts-be1-be5.md` — TDD contract specs for all BE devs (~175 tests across 32 files)
