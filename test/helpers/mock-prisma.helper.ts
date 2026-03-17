@@ -5,7 +5,9 @@ type MockDelegate = {
 };
 
 export type MockPrismaService = {
-  [K in keyof PrismaService]: PrismaService[K] extends (...args: unknown[]) => unknown
+  [K in keyof PrismaService]: PrismaService[K] extends (
+    ...args: unknown[]
+  ) => unknown
     ? jest.Mock
     : PrismaService[K] extends object
       ? MockDelegate

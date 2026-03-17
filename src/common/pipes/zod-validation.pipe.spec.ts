@@ -58,9 +58,7 @@ describe('ZodValidationPipe', () => {
   });
 
   it('should throw for completely wrong input type', () => {
-    expect(() => pipe.transform('not-an-object')).toThrow(
-      BadRequestException,
-    );
+    expect(() => pipe.transform('not-an-object')).toThrow(BadRequestException);
   });
 
   it('should work with a simple string schema', () => {
