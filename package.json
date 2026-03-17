@@ -74,6 +74,17 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "src/auth/",
+      "src/users/",
+      "src/upload/",
+      "src/projects/",
+      "src/issues/",
+      "src/sprints/",
+      "src/comments/",
+      "src/notifications/"
+    ],
     "moduleNameMapper": {
       ".*generated/prisma/client(\\.js)?$": "<rootDir>/../test/__mocks__/prisma-client.ts",
       "^(\\.\\..*)\\.js$": "$1"
