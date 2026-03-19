@@ -2,7 +2,7 @@
 
 > **This file is the single source of truth for ALL AI agents working on this project.**
 > It is committed to git so every teammate's agent stays aligned.
-> Last updated: 2026-03-15 (Session: TDD Contract Specs BE1–BE5)
+> Last updated: 2026-03-19 (Session: Auth Module Implementation — BE1)
 
 ---
 
@@ -225,6 +225,9 @@ Error responses use `HttpExceptionFilter`:
 - `@nestjs/common`, `@nestjs/core`, `@nestjs/platform-express` (v11)
 - `@nestjs/swagger`, `@nestjs/config`
 - `@prisma/client` (v7.5), `prisma` (v7.5)
+- `@nestjs/jwt`, `@nestjs/passport`, `passport`, `passport-jwt` (Auth)
+- `bcrypt` (password hashing)
+- `@nestjs/throttler` (rate limiting)
 - `zod`, `dotenv`, `rxjs`, `reflect-metadata`
 
 ### Existing Modules & Files
@@ -232,7 +235,7 @@ Error responses use `HttpExceptionFilter`:
 ```
 src/
   ├── main.ts                              # Swagger, global prefix /api, filters, interceptors
-  ├── app.module.ts                        # Root module: ConfigModule, PrismaModule, CommonModule
+  ├── app.module.ts                        # Root module: ConfigModule, PrismaModule, CommonModule, AuthModule, ThrottlerModule
   ├── app.controller.ts                    # Default GET /
   ├── app.service.ts                       # Default service
   ├── config/
@@ -240,8 +243,29 @@ src/
   ├── prisma/
   │   ├── prisma.module.ts                 # @Global PrismaModule
   │   └── prisma.service.ts                # PrismaClient with lifecycle hooks
+  ├── auth/                                # ✅ Auth module (BE1) — IMPLEMENTED
+  │   ├── auth.module.ts                   # PassportModule, JwtModule
+  │   ├── auth.controller.ts               # POST register, login, refresh, logout
+  │   ├── auth.service.ts                  # JWT signing, bcrypt hashing, refresh token mgmt
+  │   ├── auth.controller.spec.ts          # 4 tests
+  │   ├── auth.service.spec.ts             # 12 tests
+  │   ├── auth.module.spec.ts              # 3 tests
+  │   ├── dto/
+  │   │   ├── register.dto.ts              # Zod: email, password (strict), fullName
+  │   │   ├── login.dto.ts                 # Zod: email, password
+  │   │   └── refresh-token.dto.ts         # Zod: refreshToken
+  │   ├── strategies/
+  │   │   ├── jwt.strategy.ts              # Passport JWT strategy
+  │   │   └── jwt.strategy.spec.ts         # 2 tests
+  │   └── guards/
+  │       ├── jwt-auth.guard.ts            # AuthGuard('jwt')
+  │       └── jwt-auth.guard.spec.ts       # 2 tests
   ├── common/
   │   ├── common.module.ts                 # Common module
+  │   ├── constants/
+  │   │   └── error-codes.ts               # ErrorCode enum (shared across all modules)
+  │   ├── decorators/
+  │   │   └── current-user.decorator.ts    # @CurrentUser() param decorator
   │   ├── pipes/
   │   │   └── zod-validation.pipe.ts       # ZodValidationPipe
   │   ├── filters/
@@ -257,7 +281,7 @@ src/
 
 test/
   ├── app.e2e-spec.ts                      # App e2e test
-  ├── auth.e2e-spec.ts                     # Auth e2e (TDD contract — BE1)
+  ├── auth.e2e-spec.ts                     # Auth e2e — 14 integration tests (full lifecycle)
   ├── users.e2e-spec.ts                    # Users e2e (TDD contract — BE1)
   ├── projects.e2e-spec.ts                 # Projects e2e (TDD contract — BE2)
   ├── issues.e2e-spec.ts                   # Issues e2e (TDD contract — BE3)
@@ -270,6 +294,8 @@ test/
   └── helpers/
       ├── mock-prisma.helper.ts            # createMockPrismaService() factory
       └── e2e-setup.helper.ts              # createE2EApp() shared e2e bootstrap
+  └── load/
+      └── k6-auth-load-test.js             # k6 rate limiting load test (black-box)
 
 prisma/
   └── schema.prisma                        # Full schema: 9 models, 7 enums
@@ -285,7 +311,7 @@ Other:
 
 | Model | Table | Owner | Status |
 |---|---|---|---|
-| `User` | `users` | BE1 | Schema ready, no migration yet |
+| `User` | `users` | BE1 | Schema ready + hashedRefreshToken added, no migration yet |
 | `Project` | `projects` | BE2 | Schema ready, no migration yet |
 | `ProjectMember` | `project_members` | BE2 | Schema ready, no migration yet |
 | `Label` | `labels` | BE2 | Schema ready, no migration yet |
@@ -300,7 +326,7 @@ Other:
 `GlobalRole`, `ProjectRole`, `IssueStatus`, `Priority`, `IssueType`, `SprintStatus`, `NotificationType`
 
 ### What's NOT Built Yet
-- [ ] Auth module (JWT, register, login) — BE1
+- [x] Auth module (JWT, register, login, refresh, logout, rate limiting) — BE1 ✅
 - [ ] Users module (profile, avatar upload) — BE1
 - [ ] Upload module (Multer shared) — BE1
 - [ ] Projects module (CRUD, RBAC, members, labels) — BE2
@@ -341,3 +367,4 @@ Current reports:
 - `docs/reports/2026-03-14-shared-agent-context.md` — Shared AI agent context system setup
 - `docs/reports/2026-03-15-test-infrastructure-phase0.md` — Shared test infrastructure + BE6 common specs (26 tests)
 - `docs/reports/2026-03-15-tdd-contracts-be1-be5.md` — TDD contract specs for all BE devs (~175 tests across 32 files)
+- `docs/reports/2026-03-19-auth-module-implementation.md` — Auth module implementation (49 tests, 3 testing methodologies)

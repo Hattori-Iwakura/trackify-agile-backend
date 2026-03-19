@@ -10,6 +10,10 @@ jobs:
   lint-and-test:
     name: Lint & Test
     runs-on: ubuntu-latest
+    env:
+      JWT_SECRET: ci-test-jwt-secret
+      JWT_REFRESH_SECRET: ci-test-jwt-refresh-secret
+      DATABASE_URL: postgresql://test:test@localhost:5432/test_db
 
     steps:
       - name: Checkout code
