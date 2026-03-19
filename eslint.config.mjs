@@ -8,9 +8,6 @@ export default tseslint.config(
   {
     ignores: [
       'eslint.config.mjs',
-      'src/auth/**',
-      'src/users/**',
-      'src/upload/**',
       'src/projects/**',
       'src/issues/**',
       'src/sprints/**',

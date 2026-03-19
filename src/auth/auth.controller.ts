@@ -31,7 +31,10 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @Throttle({ short: { ttl: 1000, limit: 1 }, medium: { ttl: 60000, limit: 5 } })
+  @Throttle({
+    short: { ttl: 1000, limit: 1 },
+    medium: { ttl: 60000, limit: 5 },
+  })
   @UsePipes(new ZodValidationPipe(RegisterSchema))
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
@@ -44,7 +47,10 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ short: { ttl: 1000, limit: 1 }, medium: { ttl: 60000, limit: 5 } })
+  @Throttle({
+    short: { ttl: 1000, limit: 1 },
+    medium: { ttl: 60000, limit: 5 },
+  })
   @UsePipes(new ZodValidationPipe(LoginSchema))
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiResponse({ status: 200, description: 'Login successful, returns tokens' })
@@ -71,7 +77,9 @@ export class AuthController {
   @ApiOperation({ summary: 'Logout and invalidate refresh token' })
   @ApiResponse({ status: 200, description: 'Logged out successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async logout(@CurrentUser() user: { id: string; email: string; role: string }) {
+  async logout(
+    @CurrentUser() user: { id: string; email: string; role: string },
+  ) {
     await this.authService.logout(user.id);
     return { message: 'Logged out successfully' };
   }
