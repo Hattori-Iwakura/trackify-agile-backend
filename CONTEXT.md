@@ -2,7 +2,7 @@
 
 > **This file is the single source of truth for ALL AI agents working on this project.**
 > It is committed to git so every teammate's agent stays aligned.
-> Last updated: 2026-03-19 (Session: Users Module Implementation — BE6)
+> Last updated: 2026-03-19 (Session: SonarQube CI fix + Users/Upload module completion — BE6)
 
 ---
 
@@ -275,6 +275,12 @@ src/
   │   │   └── logging.interceptor.ts       # Request logger METHOD /url STATUS - Xms
   │   └── dto/
   │       └── pagination.dto.ts            # PaginationSchema + PaginatedResult<T>
+  ├── upload/                               # ✅ Upload module (BE6) — IMPLEMENTED
+  │   ├── upload.module.ts                 # UploadModule (exports UploadService)
+  │   ├── upload.service.ts                # Fire-and-forget file deletion
+  │   ├── upload.service.spec.ts           # 6 tests
+  │   ├── multer.config.ts                 # createMulterOptions() factory (reusable by BE3)
+  │   └── multer.config.spec.ts            # 11 tests
   ├── users/                               # ✅ Users module (BE6) — IMPLEMENTED
   │   ├── users.module.ts                  # UsersModule (imports UploadModule)
   │   ├── users.controller.ts              # GET /me, PATCH /me, POST /me/avatar
@@ -303,7 +309,8 @@ test/
       ├── mock-prisma.helper.ts            # createMockPrismaService() factory
       └── e2e-setup.helper.ts              # createE2EApp() shared e2e bootstrap
   └── load/
-      └── k6-auth-load-test.js             # k6 rate limiting load test (black-box)
+      ├── k6-auth-load-test.js             # k6 rate limiting load test (black-box)
+      └── k6-users-load-test.js            # k6 users endpoint load test (black-box)
 
 prisma/
   └── schema.prisma                        # Full schema: 9 models, 7 enums
@@ -377,3 +384,4 @@ Current reports:
 - `docs/reports/2026-03-15-tdd-contracts-be1-be5.md` — TDD contract specs for all BE devs (~175 tests across 32 files)
 - `docs/reports/2026-03-19-auth-module-implementation.md` — Auth module implementation (49 tests, 3 testing methodologies)
 - `docs/reports/2026-03-19-users-module-implementation.md` — Users module implementation (8 tests passing)
+- `docs/reports/2026-03-19-branch-summary-auth-users.md` — Vietnamese branch summary (Auth + Users + Upload)
