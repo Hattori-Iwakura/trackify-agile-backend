@@ -15,6 +15,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -45,7 +46,23 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update current user profile' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        fullName: {
+          type: 'string',
+          minLength: 1,
+          maxLength: 100,
+          example: 'John Doe',
+        },
+        email: { type: 'string', format: 'email', example: 'john@example.com' },
+      },
+      description: 'At least one field must be provided',
+    },
+  })
   @ApiResponse({ status: 200, description: 'Profile updated' })
+  @ApiResponse({ status: 400, description: 'Validation failed' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 409, description: 'Email already taken' })
   async updateMe(
@@ -61,6 +78,19 @@ export class UsersController {
   @UseInterceptors(FileInterceptor('avatar', createMulterOptions('avatars')))
   @ApiOperation({ summary: 'Upload user avatar' })
   @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['avatar'],
+      properties: {
+        avatar: {
+          type: 'string',
+          format: 'binary',
+          description: 'Image file (JPEG, PNG, or WebP, max 5MB)',
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 201, description: 'Avatar uploaded' })
   @ApiResponse({ status: 400, description: 'No file or invalid file type' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

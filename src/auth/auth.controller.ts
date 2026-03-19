@@ -12,6 +12,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiBody,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
@@ -37,6 +38,28 @@ export class AuthController {
   })
   @UsePipes(new ZodValidationPipe(RegisterSchema))
   @ApiOperation({ summary: 'Register a new user' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['email', 'password', 'fullName'],
+      properties: {
+        email: { type: 'string', format: 'email', example: 'user@example.com' },
+        password: {
+          type: 'string',
+          minLength: 8,
+          example: 'Password1!',
+          description:
+            'Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char',
+        },
+        fullName: {
+          type: 'string',
+          minLength: 1,
+          maxLength: 100,
+          example: 'John Doe',
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 400, description: 'Validation failed' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
@@ -53,6 +76,16 @@ export class AuthController {
   })
   @UsePipes(new ZodValidationPipe(LoginSchema))
   @ApiOperation({ summary: 'Login with email and password' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['email', 'password'],
+      properties: {
+        email: { type: 'string', format: 'email', example: 'user@example.com' },
+        password: { type: 'string', example: 'Password1!' },
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Login successful, returns tokens' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @ApiResponse({ status: 429, description: 'Too many requests' })
@@ -64,6 +97,15 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ZodValidationPipe(RefreshTokenSchema))
   @ApiOperation({ summary: 'Refresh access token using refresh token' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['refreshToken'],
+      properties: {
+        refreshToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIs...' },
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'New access token returned' })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   async refresh(@Body() dto: RefreshTokenDto) {
