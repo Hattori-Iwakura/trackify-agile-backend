@@ -6,7 +6,6 @@ import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { createMockPrismaService } from '../../test/helpers/mock-prisma.helper';
-import { ErrorCode } from '../common/constants/error-codes';
 
 jest.mock('bcrypt');
 const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
@@ -79,7 +78,9 @@ describe('AuthService', () => {
     it('should throw ConflictException if email already exists', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'existing-user' });
 
-      await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
+      await expect(service.register(registerDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should return user object without password field', async () => {
@@ -113,7 +114,9 @@ describe('AuthService', () => {
         role: 'USER',
       });
       (mockedBcrypt.compare as jest.Mock).mockResolvedValue(true);
-      (mockedBcrypt.hash as jest.Mock).mockResolvedValue('hashed-refresh-token');
+      (mockedBcrypt.hash as jest.Mock).mockResolvedValue(
+        'hashed-refresh-token',
+      );
       jwtService.sign
         .mockReturnValueOnce('access-token')
         .mockReturnValueOnce('refresh-token');
@@ -134,7 +137,9 @@ describe('AuthService', () => {
         role: 'USER',
       });
       (mockedBcrypt.compare as jest.Mock).mockResolvedValue(true);
-      (mockedBcrypt.hash as jest.Mock).mockResolvedValue('hashed-refresh-token');
+      (mockedBcrypt.hash as jest.Mock).mockResolvedValue(
+        'hashed-refresh-token',
+      );
       jwtService.sign
         .mockReturnValueOnce('access-token')
         .mockReturnValueOnce('refresh-token');
@@ -158,19 +163,27 @@ describe('AuthService', () => {
       });
       (mockedBcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException for non-existent email', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
   describe('refreshToken', () => {
     it('should return new access token for valid refresh token', async () => {
-      jwtService.verify.mockReturnValue({ sub: 'uuid-1', email: 'test@example.com', role: 'USER' });
+      jwtService.verify.mockReturnValue({
+        sub: 'uuid-1',
+        email: 'test@example.com',
+        role: 'USER',
+      });
       prisma.user.findUnique.mockResolvedValue({
         id: 'uuid-1',
         email: 'test@example.com',
@@ -197,7 +210,11 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException when user has logged out (no stored token)', async () => {
-      jwtService.verify.mockReturnValue({ sub: 'uuid-1', email: 'test@example.com', role: 'USER' });
+      jwtService.verify.mockReturnValue({
+        sub: 'uuid-1',
+        email: 'test@example.com',
+        role: 'USER',
+      });
       prisma.user.findUnique.mockResolvedValue({
         id: 'uuid-1',
         email: 'test@example.com',
@@ -211,7 +228,11 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException when refresh token hash does not match', async () => {
-      jwtService.verify.mockReturnValue({ sub: 'uuid-1', email: 'test@example.com', role: 'USER' });
+      jwtService.verify.mockReturnValue({
+        sub: 'uuid-1',
+        email: 'test@example.com',
+        role: 'USER',
+      });
       prisma.user.findUnique.mockResolvedValue({
         id: 'uuid-1',
         email: 'test@example.com',

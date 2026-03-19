@@ -12,10 +12,7 @@ describe('UsersService', () => {
     prisma = createMockPrismaService();
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        UsersService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [UsersService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
@@ -59,7 +56,9 @@ describe('UsersService', () => {
       };
       prisma.user.update.mockResolvedValue(updated);
 
-      const result = await service.updateProfile('uuid-1', { fullName: 'Updated Name' });
+      const result = await service.updateProfile('uuid-1', {
+        fullName: 'Updated Name',
+      });
 
       expect(prisma.user.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -80,17 +79,23 @@ describe('UsersService', () => {
 
   describe('updateAvatar', () => {
     it('should update avatarUrl field', async () => {
+      prisma.user.findUnique.mockResolvedValue({ avatarUrl: null });
       prisma.user.update.mockResolvedValue({
         id: 'uuid-1',
         avatarUrl: '/uploads/avatar-123.jpg',
       });
 
-      const result = await service.updateAvatar('uuid-1', '/uploads/avatar-123.jpg');
+      const result = await service.updateAvatar(
+        'uuid-1',
+        '/uploads/avatar-123.jpg',
+      );
 
       expect(prisma.user.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'uuid-1' },
-          data: expect.objectContaining({ avatarUrl: '/uploads/avatar-123.jpg' }),
+          data: expect.objectContaining({
+            avatarUrl: '/uploads/avatar-123.jpg',
+          }),
         }),
       );
       expect(result.avatarUrl).toBe('/uploads/avatar-123.jpg');

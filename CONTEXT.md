@@ -2,7 +2,7 @@
 
 > **This file is the single source of truth for ALL AI agents working on this project.**
 > It is committed to git so every teammate's agent stays aligned.
-> Last updated: 2026-03-19 (Session: Auth Module Implementation — BE1)
+> Last updated: 2026-03-19 (Session: Users Module Implementation — BE6)
 
 ---
 
@@ -275,6 +275,14 @@ src/
   │   │   └── logging.interceptor.ts       # Request logger METHOD /url STATUS - Xms
   │   └── dto/
   │       └── pagination.dto.ts            # PaginationSchema + PaginatedResult<T>
+  ├── users/                               # ✅ Users module (BE6) — IMPLEMENTED
+  │   ├── users.module.ts                  # UsersModule (imports UploadModule)
+  │   ├── users.controller.ts              # GET /me, PATCH /me, POST /me/avatar
+  │   ├── users.service.ts                 # findById, updateProfile, updateAvatar
+  │   ├── users.controller.spec.ts         # 3 tests
+  │   ├── users.service.spec.ts            # 5 tests
+  │   └── dto/
+  │       └── update-profile.dto.ts        # Zod: fullName, email (optional)
   └── health/
       ├── health.controller.ts             # GET /api/health (DB check + uptime)
       └── health.controller.spec.ts        # 2 tests
@@ -327,8 +335,8 @@ Other:
 
 ### What's NOT Built Yet
 - [x] Auth module (JWT, register, login, refresh, logout, rate limiting) — BE1 ✅
-- [ ] Users module (profile, avatar upload) — BE1
-- [ ] Upload module (Multer shared) — BE1
+- [x] Users module (profile, avatar upload) — BE6 ✅
+- [x] Upload module (Multer shared) — BE6 ✅
 - [ ] Projects module (CRUD, RBAC, members, labels) — BE2
 - [ ] Issues module (CRUD, board, attachments, filter) — BE3
 - [ ] Sprints module (lifecycle, backlog) — BE4
@@ -368,3 +376,4 @@ Current reports:
 - `docs/reports/2026-03-15-test-infrastructure-phase0.md` — Shared test infrastructure + BE6 common specs (26 tests)
 - `docs/reports/2026-03-15-tdd-contracts-be1-be5.md` — TDD contract specs for all BE devs (~175 tests across 32 files)
 - `docs/reports/2026-03-19-auth-module-implementation.md` — Auth module implementation (49 tests, 3 testing methodologies)
+- `docs/reports/2026-03-19-users-module-implementation.md` — Users module implementation (8 tests passing)

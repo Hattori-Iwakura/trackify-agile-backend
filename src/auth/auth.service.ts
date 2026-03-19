@@ -35,7 +35,10 @@ export class AuthService {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(dto.password, this.BCRYPT_SALT_ROUNDS);
+    const hashedPassword = await bcrypt.hash(
+      dto.password,
+      this.BCRYPT_SALT_ROUNDS,
+    );
 
     const user = await this.prisma.user.create({
       data: {
@@ -87,10 +90,16 @@ export class AuthService {
 
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d') as any,
+      expiresIn: this.configService.get<string>(
+        'JWT_REFRESH_EXPIRES_IN',
+        '7d',
+      ) as any,
     });
 
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, this.BCRYPT_SALT_ROUNDS);
+    const hashedRefreshToken = await bcrypt.hash(
+      refreshToken,
+      this.BCRYPT_SALT_ROUNDS,
+    );
     await this.prisma.user.update({
       where: { id: user.id },
       data: { hashedRefreshToken },
@@ -125,7 +134,10 @@ export class AuthService {
       });
     }
 
-    const tokenMatches = await bcrypt.compare(refreshToken, user.hashedRefreshToken);
+    const tokenMatches = await bcrypt.compare(
+      refreshToken,
+      user.hashedRefreshToken,
+    );
 
     if (!tokenMatches) {
       throw new UnauthorizedException({
@@ -138,7 +150,10 @@ export class AuthService {
       { sub: user.id, email: user.email, role: user.role },
       {
         secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '15m') as any,
+        expiresIn: this.configService.get<string>(
+          'JWT_EXPIRES_IN',
+          '15m',
+        ) as any,
       },
     );
 

@@ -33,7 +33,11 @@ describe('JwtStrategy', () => {
 
   describe('validate', () => {
     it('should return user payload for valid token payload', async () => {
-      const payload = { sub: 'uuid-1', email: 'test@example.com', role: 'USER' };
+      const payload = {
+        sub: 'uuid-1',
+        email: 'test@example.com',
+        role: 'USER',
+      };
       prisma.user.findUnique.mockResolvedValue({
         id: 'uuid-1',
         email: 'test@example.com',
@@ -42,14 +46,24 @@ describe('JwtStrategy', () => {
 
       const result = await strategy.validate(payload);
 
-      expect(result).toEqual({ id: 'uuid-1', email: 'test@example.com', role: 'USER' });
+      expect(result).toEqual({
+        id: 'uuid-1',
+        email: 'test@example.com',
+        role: 'USER',
+      });
     });
 
     it('should throw UnauthorizedException if user not found', async () => {
-      const payload = { sub: 'nonexistent', email: 'gone@example.com', role: 'USER' };
+      const payload = {
+        sub: 'nonexistent',
+        email: 'gone@example.com',
+        role: 'USER',
+      };
       prisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate(payload)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });
