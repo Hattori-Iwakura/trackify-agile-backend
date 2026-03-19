@@ -124,7 +124,10 @@ describe('Users (e2e)', () => {
         .patch('/api/users/me')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ fullName: '' })
-        .expect(400);
+        .expect(400)
+        .expect((res) => {
+          expect(res.body.statusCode).toBe(400);
+        });
     });
 
     it('should return 409 for duplicate email', async () => {
@@ -144,7 +147,10 @@ describe('Users (e2e)', () => {
         .patch('/api/users/me')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ email: 'taken@example.com' })
-        .expect(409);
+        .expect(409)
+        .expect((res) => {
+          expect(res.body.message).toBeDefined();
+        });
     });
   });
 
@@ -201,7 +207,10 @@ describe('Users (e2e)', () => {
           filename: 'test.txt',
           contentType: 'text/plain',
         })
-        .expect(400);
+        .expect(400)
+        .expect((res) => {
+          expect(res.body.statusCode).toBe(400);
+        });
     });
   });
 });

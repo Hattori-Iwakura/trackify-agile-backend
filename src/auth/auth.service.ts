@@ -127,7 +127,7 @@ export class AuthService {
       where: { id: payload.sub },
     });
 
-    if (!user || !user.hashedRefreshToken) {
+    if (!user?.hashedRefreshToken) {
       throw new UnauthorizedException({
         message: 'Invalid or expired refresh token',
         errorCode: ErrorCode.AUTH_REFRESH_TOKEN_INVALID,

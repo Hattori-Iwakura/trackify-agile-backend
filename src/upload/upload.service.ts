@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { unlink } from 'fs';
+import { unlink } from 'node:fs';
 
 @Injectable()
 export class UploadService {
