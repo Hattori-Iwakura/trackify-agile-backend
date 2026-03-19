@@ -53,14 +53,20 @@ describe('Auth (e2e)', () => {
       return request(app.getHttpServer())
         .post('/api/auth/register')
         .send({ email: 'test@example.com', password: 'password1!', fullName: 'Test' })
-        .expect(400);
+        .expect(400)
+        .expect((res) => {
+          expect(res.body.statusCode).toBe(400);
+        });
     });
 
     it('should return 400 for weak password (no special char)', () => {
       return request(app.getHttpServer())
         .post('/api/auth/register')
         .send({ email: 'test@example.com', password: 'Password1', fullName: 'Test' })
-        .expect(400);
+        .expect(400)
+        .expect((res) => {
+          expect(res.body.statusCode).toBe(400);
+        });
     });
 
     it('should return 400 for short password', () => {
@@ -113,7 +119,10 @@ describe('Auth (e2e)', () => {
       return request(app.getHttpServer())
         .post('/api/auth/login')
         .send({ email: 'test@example.com', password: 'WrongPassword1!' })
-        .expect(401);
+        .expect(401)
+        .expect((res) => {
+          expect(res.body.message).toBeDefined();
+        });
     });
 
     it('should return 401 for non-existent email', () => {
@@ -122,7 +131,10 @@ describe('Auth (e2e)', () => {
       return request(app.getHttpServer())
         .post('/api/auth/login')
         .send({ email: 'nonexistent@example.com', password: 'Password1!' })
-        .expect(401);
+        .expect(401)
+        .expect((res) => {
+          expect(res.body.message).toBeDefined();
+        });
     });
   });
 
@@ -165,7 +177,10 @@ describe('Auth (e2e)', () => {
       return request(app.getHttpServer())
         .post('/api/auth/refresh')
         .send({ refreshToken: 'invalid-token' })
-        .expect(401);
+        .expect(401)
+        .expect((res) => {
+          expect(res.body.message).toBeDefined();
+        });
     });
   });
 
@@ -196,7 +211,10 @@ describe('Auth (e2e)', () => {
       return request(app.getHttpServer())
         .post('/api/auth/logout')
         .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200);
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.statusCode).toBe(200);
+        });
     });
 
     it('should return 401 without auth token', () => {

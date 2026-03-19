@@ -1,12 +1,12 @@
 import { BadRequestException } from '@nestjs/common';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import { diskStorage } from 'multer';
-import { mkdirSync } from 'fs';
-import { extname, join } from 'path';
-import { randomUUID } from 'crypto';
+import { mkdirSync } from 'node:fs';
+import { extname, join } from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { ErrorCode } from '../common/constants/error-codes';
 
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 export function createMulterOptions(subDir: string): MulterOptions {
   const uploadDir = process.env.UPLOAD_DIR || './uploads';
@@ -30,7 +30,7 @@ export function createMulterOptions(subDir: string): MulterOptions {
       },
     }),
     fileFilter: (_req, file, cb) => {
-      if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+      if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
         return cb(
           new BadRequestException(ErrorCode.FILE_TYPE_NOT_ALLOWED),
           false,
