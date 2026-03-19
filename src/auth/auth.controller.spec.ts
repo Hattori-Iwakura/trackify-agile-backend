@@ -29,7 +29,7 @@ describe('AuthController', () => {
 
   describe('POST /auth/register', () => {
     it('should call authService.register and return result', async () => {
-      const dto = { email: 'test@example.com', password: 'password123', fullName: 'Test' };
+      const dto = { email: 'test@example.com', password: 'Password1!', fullName: 'Test' };
       const expected = { id: 'uuid-1', email: dto.email, fullName: dto.fullName };
       authService.register.mockResolvedValue(expected);
 
@@ -42,7 +42,7 @@ describe('AuthController', () => {
 
   describe('POST /auth/login', () => {
     it('should call authService.login and return tokens', async () => {
-      const dto = { email: 'test@example.com', password: 'password123' };
+      const dto = { email: 'test@example.com', password: 'Password1!' };
       const tokens = { accessToken: 'at', refreshToken: 'rt' };
       authService.login.mockResolvedValue(tokens);
 
@@ -68,7 +68,7 @@ describe('AuthController', () => {
     it('should call authService.logout', async () => {
       authService.logout.mockResolvedValue(undefined);
 
-      const mockUser = { id: 'uuid-1', email: 'test@example.com' };
+      const mockUser = { id: 'uuid-1', email: 'test@example.com', role: 'USER' };
       await controller.logout(mockUser);
 
       expect(authService.logout).toHaveBeenCalledWith('uuid-1');
