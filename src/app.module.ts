@@ -8,6 +8,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { ProjectsModule } from './projects/projects.module';
 import { HealthController } from './health/health.controller';
 import { validateEnv } from './config/env.validation';
 
@@ -28,6 +29,7 @@ import { validateEnv } from './config/env.validation';
     CommonModule,
     AuthModule,
     UsersModule,
+    ProjectsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

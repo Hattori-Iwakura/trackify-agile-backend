@@ -30,7 +30,7 @@ function createMockDelegate(): MockDelegate {
 }
 
 export function createMockPrismaService() {
-  return {
+  const mock = {
     $connect: jest.fn(),
     $disconnect: jest.fn(),
     $queryRaw: jest.fn(),
@@ -47,4 +47,14 @@ export function createMockPrismaService() {
     comment: createMockDelegate(),
     notification: createMockDelegate(),
   };
+
+  // Support interactive transactions: $transaction(async (tx) => { ... })
+  mock.$transaction.mockImplementation(async (cbOrArray: any) => {
+    if (typeof cbOrArray === 'function') {
+      return cbOrArray(mock);
+    }
+    return cbOrArray;
+  });
+
+  return mock;
 }
