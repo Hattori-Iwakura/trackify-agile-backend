@@ -3,7 +3,7 @@ import type { ZodSchema } from 'zod';
 
 @Injectable()
 export class ZodValidationPipe implements PipeTransform {
-  private schema: ZodSchema;
+  private readonly schema: ZodSchema;
 
   constructor(schema: ZodSchema) {
     this.schema = schema;

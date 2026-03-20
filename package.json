@@ -24,11 +24,14 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/platform-socket.io": "^11.1.17",
     "@nestjs/swagger": "^11.2.6",
     "@nestjs/throttler": "^6.5.0",
+    "@nestjs/websockets": "^11.1.17",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
     "bcrypt": "^6.0.0",
@@ -38,6 +41,7 @@
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.8.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -89,8 +93,7 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "src/sprints/",
-      "src/comments/",
-      "src/notifications/"
+      "src/comments/"
     ],
     "moduleNameMapper": {
       ".*generated/prisma/client(\\.js)?$": "<rootDir>/../test/__mocks__/prisma-client.ts",
