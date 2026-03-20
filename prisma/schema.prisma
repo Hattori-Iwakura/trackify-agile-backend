@@ -96,8 +96,9 @@ model Project {
   name        String
   key         String   @unique
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  issueSequence Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   members ProjectMember[]
   issues  Issue[]
@@ -167,6 +168,8 @@ model Issue {
   comments    Comment[]
 
   @@unique([projectId, issueNumber])
+  @@index([projectId, status])
+  @@index([projectId, sprintId])
   @@map("issues")
 }
 
