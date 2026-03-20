@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { IssuesController } from './issues.controller';
 import { IssuesService } from './issues.service';
+import { ProjectRoleGuard } from '../projects/guards/project-role.guard';
 
 describe('IssuesController', () => {
   let controller: IssuesController;
@@ -14,7 +15,7 @@ describe('IssuesController', () => {
       update: jest.fn(),
       remove: jest.fn(),
       updateStatus: jest.fn(),
-      updatePosition: jest.fn(),
+      reorder: jest.fn(),
       getBoard: jest.fn(),
       addLabel: jest.fn(),
       removeLabel: jest.fn(),
@@ -23,7 +24,10 @@ describe('IssuesController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [IssuesController],
       providers: [{ provide: IssuesService, useValue: service }],
-    }).compile();
+    })
+      .overrideGuard(ProjectRoleGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<IssuesController>(IssuesController);
   });
@@ -44,7 +48,7 @@ describe('IssuesController', () => {
     it('should return paginated issues', async () => {
       service.findAll.mockResolvedValue({ data: [], meta: { total: 0 } });
 
-      const result = await controller.findAll('proj-1', {});
+      const result = await controller.findAll('proj-1', { page: 1, limit: 20 });
 
       expect(result).toHaveProperty('data');
     });
@@ -54,7 +58,7 @@ describe('IssuesController', () => {
     it('should return single issue', async () => {
       service.findOne.mockResolvedValue({ issueKey: 'TRK-1' });
 
-      const result = await controller.findOne('TRK-1');
+      const result = await controller.findOne('proj-1', 'TRK-1');
 
       expect(result.issueKey).toBe('TRK-1');
     });
@@ -74,17 +78,17 @@ describe('IssuesController', () => {
     it('should update status', async () => {
       service.updateStatus.mockResolvedValue({ issueKey: 'TRK-1', status: 'DONE' });
 
-      const result = await controller.updateStatus('TRK-1', { status: 'DONE' });
+      const result = await controller.updateStatus('proj-1', 'TRK-1', { status: 'DONE' });
 
       expect(result.status).toBe('DONE');
     });
   });
 
-  describe('PATCH .../issues/:issueKey/position', () => {
-    it('should update position', async () => {
-      service.updatePosition.mockResolvedValue({ issueKey: 'TRK-1', position: 2 });
+  describe('PATCH .../issues/:issueKey/reorder', () => {
+    it('should reorder issue', async () => {
+      service.reorder.mockResolvedValue({ issueKey: 'TRK-1', position: 2, status: 'TODO' });
 
-      const result = await controller.updatePosition('TRK-1', { position: 2 });
+      const result = await controller.reorder('proj-1', 'TRK-1', { status: 'TODO', position: 2 });
 
       expect(result.position).toBe(2);
     });
@@ -94,7 +98,23 @@ describe('IssuesController', () => {
     it('should delete issue', async () => {
       service.remove.mockResolvedValue(undefined);
 
-      await expect(controller.remove('TRK-1')).resolves.not.toThrow();
+      await expect(controller.remove('proj-1', 'TRK-1')).resolves.not.toThrow();
+    });
+  });
+
+  describe('POST .../issues/:issueKey/labels/:labelId', () => {
+    it('should add label to issue', async () => {
+      service.addLabel.mockResolvedValue(undefined);
+
+      await expect(controller.addLabel('proj-1', 'TRK-1', 'label-1')).resolves.not.toThrow();
+    });
+  });
+
+  describe('DELETE .../issues/:issueKey/labels/:labelId', () => {
+    it('should remove label from issue', async () => {
+      service.removeLabel.mockResolvedValue(undefined);
+
+      await expect(controller.removeLabel('proj-1', 'TRK-1', 'label-1')).resolves.not.toThrow();
     });
   });
 });

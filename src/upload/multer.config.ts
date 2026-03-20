@@ -6,9 +6,13 @@ import { extname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { ErrorCode } from '../common/constants/error-codes';
 
-const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const DEFAULT_ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-export function createMulterOptions(subDir: string): MulterOptions {
+export function createMulterOptions(
+  subDir: string,
+  allowedMimeTypes: string[] = DEFAULT_ALLOWED_MIME_TYPES,
+): MulterOptions {
+  const mimeTypeSet = new Set(allowedMimeTypes);
   const uploadDir = process.env.UPLOAD_DIR || './uploads';
   const destination = join(uploadDir, subDir);
 
@@ -30,7 +34,7 @@ export function createMulterOptions(subDir: string): MulterOptions {
       },
     }),
     fileFilter: (_req, file, cb) => {
-      if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
+      if (!mimeTypeSet.has(file.mimetype)) {
         return cb(
           new BadRequestException(ErrorCode.FILE_TYPE_NOT_ALLOWED),
           false,

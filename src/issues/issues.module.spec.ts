@@ -2,11 +2,12 @@ import { Test } from '@nestjs/testing';
 import { IssuesModule } from './issues.module';
 import { IssuesController } from './issues.controller';
 import { IssuesService } from './issues.service';
+import { PrismaModule } from '../prisma/prisma.module';
 
 describe('IssuesModule', () => {
   it('should compile the module', async () => {
     const module = await Test.createTestingModule({
-      imports: [IssuesModule],
+      imports: [PrismaModule, IssuesModule],
     }).compile();
 
     expect(module).toBeDefined();
@@ -14,7 +15,7 @@ describe('IssuesModule', () => {
 
   it('should have IssuesController defined', async () => {
     const module = await Test.createTestingModule({
-      imports: [IssuesModule],
+      imports: [PrismaModule, IssuesModule],
     }).compile();
 
     expect(module.get<IssuesController>(IssuesController)).toBeDefined();
@@ -22,7 +23,7 @@ describe('IssuesModule', () => {
 
   it('should have IssuesService defined', async () => {
     const module = await Test.createTestingModule({
-      imports: [IssuesModule],
+      imports: [PrismaModule, IssuesModule],
     }).compile();
 
     expect(module.get<IssuesService>(IssuesService)).toBeDefined();

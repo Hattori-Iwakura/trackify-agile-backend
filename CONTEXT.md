@@ -2,7 +2,7 @@
 
 > **This file is the single source of truth for ALL AI agents working on this project.**
 > It is committed to git so every teammate's agent stays aligned.
-> Last updated: 2026-03-20 (Session: Projects module implementation — BE2)
+> Last updated: 2026-03-20 (Session: Issues module implementation — BE3)
 
 ---
 
@@ -235,7 +235,7 @@ Error responses use `HttpExceptionFilter`:
 ```
 src/
   ├── main.ts                              # Swagger, global prefix /api, filters, interceptors
-  ├── app.module.ts                        # Root module: ConfigModule, PrismaModule, CommonModule, AuthModule, ProjectsModule, ThrottlerModule
+  ├── app.module.ts                        # Root module: ConfigModule, PrismaModule, CommonModule, AuthModule, ProjectsModule, IssuesModule, ThrottlerModule
   ├── app.controller.ts                    # Default GET /
   ├── app.service.ts                       # Default service
   ├── config/
@@ -279,7 +279,7 @@ src/
   │   ├── upload.module.ts                 # UploadModule (exports UploadService)
   │   ├── upload.service.ts                # Fire-and-forget file deletion
   │   ├── upload.service.spec.ts           # 6 tests
-  │   ├── multer.config.ts                 # createMulterOptions() factory (reusable by BE3)
+  │   ├── multer.config.ts                 # createMulterOptions(subDir, allowedMimeTypes?) factory
   │   └── multer.config.spec.ts            # 11 tests
   ├── users/                               # ✅ Users module (BE6) — IMPLEMENTED
   │   ├── users.module.ts                  # UsersModule (imports UploadModule)
@@ -316,6 +316,24 @@ src/
   │       ├── update-member-role.dto.ts   # Zod: role (required)
   │       ├── create-label.dto.ts         # Zod: name, color (hex regex)
   │       └── update-label.dto.ts         # Zod: name, color (both optional)
+  ├── issues/                               # ✅ Issues module (BE3) — IMPLEMENTED
+  │   ├── issues.module.ts               # IssuesModule (imports UploadModule)
+  │   ├── issues.controller.ts           # CRUD + board + reorder + labels
+  │   ├── issues.service.ts              # Business logic + atomic key generation
+  │   ├── issues.controller.spec.ts      # 9 tests
+  │   ├── issues.service.spec.ts         # 12 tests
+  │   ├── issues.module.spec.ts          # 3 tests
+  │   ├── attachments/
+  │   │   ├── attachments.controller.ts  # Upload, list, delete (Multer)
+  │   │   ├── attachments.service.ts     # Attachment CRUD + ownership check
+  │   │   ├── attachments.controller.spec.ts  # 3 tests
+  │   │   └── attachments.service.spec.ts     # 4 tests
+  │   └── dto/
+  │       ├── create-issue.dto.ts        # Zod: title, description, priority, type, assigneeId, labelIds
+  │       ├── update-issue.dto.ts        # Zod: all optional, assigneeId nullable
+  │       ├── update-issue-status.dto.ts # Zod: status (required)
+  │       ├── reorder-issue.dto.ts       # Zod: status, position
+  │       └── query-issues.dto.ts        # Zod: extends Pagination + filters
   └── health/
       ├── health.controller.ts             # GET /api/health (DB check + uptime)
       └── health.controller.spec.ts        # 2 tests
@@ -355,10 +373,10 @@ Other:
 | Model | Table | Owner | Status |
 |---|---|---|---|
 | `User` | `users` | BE1 | Schema ready + hashedRefreshToken added, no migration yet |
-| `Project` | `projects` | BE2 | Schema ready, no migration yet |
+| `Project` | `projects` | BE2 | Schema ready + issueSequence added, no migration yet |
 | `ProjectMember` | `project_members` | BE2 | Schema ready + @@index([userId]), no migration yet |
 | `Label` | `labels` | BE2 | Schema ready, no migration yet |
-| `Issue` | `issues` | BE3 | Schema ready, no migration yet |
+| `Issue` | `issues` | BE3 | Schema ready + indexes added, no migration yet |
 | `IssueLabel` | `issue_labels` | BE3 | Schema ready, no migration yet |
 | `Attachment` | `attachments` | BE3 | Schema ready, no migration yet |
 | `Sprint` | `sprints` | BE4 | Schema ready, no migration yet |
@@ -373,7 +391,7 @@ Other:
 - [x] Users module (profile, avatar upload) — BE6 ✅
 - [x] Upload module (Multer shared) — BE6 ✅
 - [x] Projects module (CRUD, RBAC, members, labels) — BE2 ✅
-- [ ] Issues module (CRUD, board, attachments, filter) — BE3
+- [x] Issues module (CRUD, board, attachments, filter) — BE3 ✅
 - [ ] Sprints module (lifecycle, backlog) — BE4
 - [ ] Comments module (CRUD, threading) — BE4
 - [ ] Notifications module (WebSocket gateway, Socket.io) — BE5
@@ -414,3 +432,4 @@ Current reports:
 - `docs/reports/2026-03-19-users-module-implementation.md` — Users module implementation (8 tests passing)
 - `docs/reports/2026-03-19-branch-summary-auth-users.md` — Vietnamese branch summary (Auth + Users + Upload)
 - `docs/reports/2026-03-20-projects-module-implementation.md` — Projects module: CRUD, RBAC, members, labels (58 unit + 11 e2e tests)
+- `docs/reports/2026-03-20-issues-module-implementation.md` — Issues module: CRUD, Kanban board, attachments, labels (35 tests)

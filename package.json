@@ -88,7 +88,6 @@
     "testEnvironment": "node",
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "src/issues/",
       "src/sprints/",
       "src/comments/",
       "src/notifications/"

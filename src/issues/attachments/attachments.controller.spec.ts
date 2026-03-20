@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AttachmentsController } from './attachments.controller';
 import { AttachmentsService } from './attachments.service';
+import { ProjectRoleGuard } from '../../projects/guards/project-role.guard';
 
 describe('AttachmentsController', () => {
   let controller: AttachmentsController;
@@ -16,7 +17,10 @@ describe('AttachmentsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AttachmentsController],
       providers: [{ provide: AttachmentsService, useValue: service }],
-    }).compile();
+    })
+      .overrideGuard(ProjectRoleGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<AttachmentsController>(AttachmentsController);
   });
@@ -24,9 +28,10 @@ describe('AttachmentsController', () => {
   describe('POST .../attachments', () => {
     it('should upload file and return 201 with metadata', async () => {
       const mockFile = {
-        filename: 'test.pdf',
+        originalname: 'test.pdf',
         mimetype: 'application/pdf',
         size: 1024,
+        path: '/uploads/attachments/test.pdf',
       } as Express.Multer.File;
 
       service.upload.mockResolvedValue({
@@ -36,9 +41,9 @@ describe('AttachmentsController', () => {
         size: 1024,
       });
 
-      const result = await controller.upload('issue-1', { id: 'uuid-1' }, mockFile);
+      const result = await controller.upload('proj-1', 'TRK-1', { id: 'uuid-1' }, mockFile);
 
-      expect(service.upload).toHaveBeenCalledWith('issue-1', 'uuid-1', mockFile);
+      expect(service.upload).toHaveBeenCalledWith('proj-1', 'TRK-1', 'uuid-1', mockFile);
       expect(result).toHaveProperty('filename', 'test.pdf');
     });
   });
@@ -47,7 +52,7 @@ describe('AttachmentsController', () => {
     it('should return list of attachments', async () => {
       service.findAllForIssue.mockResolvedValue([{ id: 'att-1' }]);
 
-      const result = await controller.findAll('issue-1');
+      const result = await controller.findAll('proj-1', 'TRK-1');
 
       expect(result).toHaveLength(1);
     });
@@ -56,8 +61,11 @@ describe('AttachmentsController', () => {
   describe('DELETE .../attachments/:id', () => {
     it('should delete attachment', async () => {
       service.remove.mockResolvedValue(undefined);
+      const req = { projectMember: { role: 'MEMBER' } };
 
-      await expect(controller.remove('att-1', { id: 'uuid-1' })).resolves.not.toThrow();
+      await expect(
+        controller.remove('att-1', { id: 'uuid-1' }, req),
+      ).resolves.not.toThrow();
     });
   });
 });
