@@ -1,8 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import {
-  ConflictException,
-  ForbiddenException,
   NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -26,184 +25,167 @@ describe('ProjectsService', () => {
   });
 
   describe('create', () => {
-    const createDto = { name: 'My Project', key: 'MP', description: 'Test' };
-    const userId = 'uuid-1';
-
-    it('should create project and add creator as OWNER member', async () => {
-      prisma.project.findUnique.mockResolvedValue(null);
-      prisma.project.create.mockResolvedValue({
+    it('should create project and assign creator as OWNER', async () => {
+      const project = {
         id: 'proj-1',
-        ...createDto,
-        key: 'MP',
-      });
-      prisma.projectMember.create.mockResolvedValue({
-        userId,
+        name: 'Test Project',
+        key: 'TP',
+        description: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const member = {
+        id: 'pm-1',
+        userId: 'user-1',
         projectId: 'proj-1',
         role: 'OWNER',
+      };
+
+      prisma.$transaction.mockImplementation(async (cb: any) => {
+        prisma.project.create.mockResolvedValue(project);
+        prisma.projectMember.create.mockResolvedValue(member);
+        return cb(prisma);
       });
 
-      const result = await service.create(createDto, userId);
+      const result = await service.create(
+        { name: 'Test Project', key: 'TP' },
+        'user-1',
+      );
 
-      expect(prisma.project.create).toHaveBeenCalled();
-      expect(result).toHaveProperty('id');
+      expect(result).toEqual({ ...project, members: [member] });
     });
 
-    it('should generate project key in uppercase', async () => {
-      prisma.project.findUnique.mockResolvedValue(null);
-      prisma.project.create.mockResolvedValue({
-        id: 'proj-1',
-        ...createDto,
-        key: 'MP',
-      });
-      prisma.projectMember.create.mockResolvedValue({});
+    it('should throw ConflictException for duplicate key (P2002)', async () => {
+      const prismaError = new Error('Unique constraint failed');
+      (prismaError as any).code = 'P2002';
+      prisma.$transaction.mockRejectedValue(prismaError);
 
-      await service.create({ ...createDto, key: 'mp' }, userId);
-
-      expect(prisma.project.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({ key: 'MP' }),
-        }),
-      );
-    });
-
-    it('should throw ConflictException for duplicate key', async () => {
-      prisma.project.findUnique.mockResolvedValue({ id: 'existing' });
-
-      await expect(service.create(createDto, userId)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(
+        service.create({ name: 'Test', key: 'TP' }, 'user-1'),
+      ).rejects.toThrow(ConflictException);
     });
   });
 
   describe('findAll', () => {
     it('should return paginated projects for user', async () => {
-      prisma.project.findMany.mockResolvedValue([
-        { id: 'proj-1', name: 'Project 1' },
-      ]);
+      const projects = [
+        { id: 'proj-1', name: 'Project 1', key: 'P1', _count: { members: 3 } },
+      ];
+      prisma.project.findMany.mockResolvedValue(projects);
       prisma.project.count.mockResolvedValue(1);
 
-      const result = await service.findAll('uuid-1', { page: 1, limit: 20 });
+      const result = await service.findAll('user-1', { page: 1, limit: 20 });
 
-      expect(result).toHaveProperty('data');
-      expect(result).toHaveProperty('meta');
-    });
-
-    it('should only return projects where user is a member', async () => {
-      await service.findAll('uuid-1', { page: 1, limit: 20 });
-
+      expect(result.data).toEqual(projects);
+      expect(result.meta).toEqual({
+        total: 1,
+        page: 1,
+        limit: 20,
+        totalPages: 1,
+      });
       expect(prisma.project.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({
-            members: expect.objectContaining({
-              some: { userId: 'uuid-1' },
-            }),
-          }),
+          where: { members: { some: { userId: 'user-1' } } },
+          skip: 0,
+          take: 20,
         }),
+      );
+    });
+
+    it('should calculate correct pagination offset', async () => {
+      prisma.project.findMany.mockResolvedValue([]);
+      prisma.project.count.mockResolvedValue(0);
+
+      await service.findAll('user-1', { page: 3, limit: 10 });
+
+      expect(prisma.project.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 20, take: 10 }),
       );
     });
   });
 
   describe('findOne', () => {
-    it('should return project with members', async () => {
-      prisma.project.findUnique.mockResolvedValue({
+    it('should return project with member and label counts', async () => {
+      const project = {
         id: 'proj-1',
         name: 'Test',
-        members: [],
-      });
+        key: 'TP',
+        description: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        _count: { members: 2, labels: 5 },
+      };
+      prisma.project.findUnique.mockResolvedValue(project);
 
       const result = await service.findOne('proj-1');
 
-      expect(result).toHaveProperty('id', 'proj-1');
+      expect(result).toEqual(project);
+      expect(prisma.project.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'proj-1' },
+        }),
+      );
     });
 
-    it('should throw NotFoundException for non-existent project', async () => {
+    it('should throw NotFoundException when project does not exist', async () => {
       prisma.project.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('non-existent')).rejects.toThrow(
+      await expect(service.findOne('nonexistent')).rejects.toThrow(
         NotFoundException,
       );
     });
   });
 
   describe('update', () => {
-    it('should update project fields', async () => {
-      prisma.project.update.mockResolvedValue({
+    it('should update project name and description', async () => {
+      prisma.project.findUnique.mockResolvedValue({ id: 'proj-1' });
+      const updated = {
         id: 'proj-1',
         name: 'Updated',
+        description: 'New desc',
+        key: 'TP',
+      };
+      prisma.project.update.mockResolvedValue(updated);
+
+      const result = await service.update('proj-1', {
+        name: 'Updated',
+        description: 'New desc',
       });
 
-      const result = await service.update('proj-1', { name: 'Updated' });
+      expect(result).toEqual(updated);
+      expect(prisma.project.update).toHaveBeenCalledWith({
+        where: { id: 'proj-1' },
+        data: { name: 'Updated', description: 'New desc' },
+      });
+    });
 
-      expect(result.name).toBe('Updated');
+    it('should throw NotFoundException for nonexistent project', async () => {
+      prisma.project.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.update('nonexistent', { name: 'X' }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
-  describe('remove', () => {
+  describe('delete', () => {
     it('should delete project', async () => {
+      prisma.project.findUnique.mockResolvedValue({ id: 'proj-1' });
       prisma.project.delete.mockResolvedValue({ id: 'proj-1' });
 
-      await expect(service.remove('proj-1')).resolves.not.toThrow();
-    });
-  });
+      await service.delete('proj-1');
 
-  describe('addMember', () => {
-    it('should add user as project member with role', async () => {
-      prisma.projectMember.findUnique.mockResolvedValue(null);
-      prisma.projectMember.create.mockResolvedValue({
-        userId: 'uuid-2',
-        projectId: 'proj-1',
-        role: 'MEMBER',
+      expect(prisma.project.delete).toHaveBeenCalledWith({
+        where: { id: 'proj-1' },
       });
-
-      const result = await service.addMember('proj-1', 'uuid-2', 'MEMBER');
-
-      expect(result.role).toBe('MEMBER');
     });
 
-    it('should throw ConflictException if user is already a member', async () => {
-      prisma.projectMember.findUnique.mockResolvedValue({ id: 'existing' });
+    it('should throw NotFoundException for nonexistent project', async () => {
+      prisma.project.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.addMember('proj-1', 'uuid-2', 'MEMBER'),
-      ).rejects.toThrow(ConflictException);
-    });
-  });
-
-  describe('removeMember', () => {
-    it('should remove member from project', async () => {
-      prisma.projectMember.findUnique.mockResolvedValue({
-        userId: 'uuid-2',
-        role: 'MEMBER',
-      });
-      prisma.projectMember.delete.mockResolvedValue({});
-
-      await expect(
-        service.removeMember('proj-1', 'uuid-2'),
-      ).resolves.not.toThrow();
-    });
-
-    it('should throw ForbiddenException if removing OWNER', async () => {
-      prisma.projectMember.findUnique.mockResolvedValue({
-        userId: 'uuid-1',
-        role: 'OWNER',
-      });
-
-      await expect(
-        service.removeMember('proj-1', 'uuid-1'),
-      ).rejects.toThrow(ForbiddenException);
-    });
-  });
-
-  describe('updateMemberRole', () => {
-    it('should update member role', async () => {
-      prisma.projectMember.update.mockResolvedValue({
-        userId: 'uuid-2',
-        role: 'ADMIN',
-      });
-
-      const result = await service.updateMemberRole('proj-1', 'uuid-2', 'ADMIN');
-
-      expect(result.role).toBe('ADMIN');
+      await expect(service.delete('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

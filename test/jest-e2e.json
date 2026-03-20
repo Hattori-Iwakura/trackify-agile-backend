@@ -8,6 +8,7 @@
   },
   "moduleNameMapper": {
     ".*generated/prisma/client(\\.js)?$": "<rootDir>/__mocks__/prisma-client.ts",
+    ".*generated/prisma/enums(\\.js)?$": "<rootDir>/__mocks__/prisma-enums.ts",
     "^(\\.\\..*)\\.js$": "$1"
   }
 }

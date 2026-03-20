@@ -2,7 +2,7 @@
 
 > **This file is the single source of truth for ALL AI agents working on this project.**
 > It is committed to git so every teammate's agent stays aligned.
-> Last updated: 2026-03-19 (Session: SonarQube CI fix + Users/Upload module completion — BE6)
+> Last updated: 2026-03-20 (Session: Projects module implementation — BE2)
 
 ---
 
@@ -235,7 +235,7 @@ Error responses use `HttpExceptionFilter`:
 ```
 src/
   ├── main.ts                              # Swagger, global prefix /api, filters, interceptors
-  ├── app.module.ts                        # Root module: ConfigModule, PrismaModule, CommonModule, AuthModule, ThrottlerModule
+  ├── app.module.ts                        # Root module: ConfigModule, PrismaModule, CommonModule, AuthModule, ProjectsModule, ThrottlerModule
   ├── app.controller.ts                    # Default GET /
   ├── app.service.ts                       # Default service
   ├── config/
@@ -289,6 +289,33 @@ src/
   │   ├── users.service.spec.ts            # 5 tests
   │   └── dto/
   │       └── update-profile.dto.ts        # Zod: fullName, email (optional)
+  ├── projects/                             # ✅ Projects module (BE2) — IMPLEMENTED
+  │   ├── projects.module.ts              # ProjectsModule (3 controllers, 3 services)
+  │   ├── projects.controller.ts          # POST, GET, GET/:id, PATCH/:id, DELETE/:id
+  │   ├── projects.service.ts             # Project CRUD with $transaction for create
+  │   ├── projects.controller.spec.ts     # 5 tests
+  │   ├── projects.service.spec.ts        # 10 tests
+  │   ├── projects.module.spec.ts         # 3 tests
+  │   ├── members.controller.ts           # POST, GET, PATCH/:userId, DELETE/me, DELETE/:userId
+  │   ├── members.service.ts              # Member CRUD with role escalation & last-owner rule
+  │   ├── members.controller.spec.ts      # 5 tests
+  │   ├── members.service.spec.ts         # 12 tests
+  │   ├── labels.controller.ts            # POST, GET, PATCH/:labelId, DELETE/:labelId
+  │   ├── labels.service.ts               # Label CRUD with per-project name uniqueness
+  │   ├── labels.controller.spec.ts       # 4 tests
+  │   ├── labels.service.spec.ts          # 8 tests
+  │   ├── guards/
+  │   │   ├── project-role.guard.ts       # ProjectRoleGuard (checks membership + role)
+  │   │   └── project-role.guard.spec.ts  # 8 tests
+  │   ├── decorators/
+  │   │   └── require-project-roles.decorator.ts  # @RequireProjectRoles() metadata decorator
+  │   └── dto/
+  │       ├── create-project.dto.ts       # Zod: name, key (toUpperCase), description
+  │       ├── update-project.dto.ts       # Zod: name, description (key immutable)
+  │       ├── add-member.dto.ts           # Zod: userId (UUID), role (default MEMBER)
+  │       ├── update-member-role.dto.ts   # Zod: role (required)
+  │       ├── create-label.dto.ts         # Zod: name, color (hex regex)
+  │       └── update-label.dto.ts         # Zod: name, color (both optional)
   └── health/
       ├── health.controller.ts             # GET /api/health (DB check + uptime)
       └── health.controller.spec.ts        # 2 tests
@@ -304,7 +331,8 @@ test/
   ├── notifications.e2e-spec.ts            # Notifications e2e (TDD contract — BE5)
   ├── jest-e2e.json                        # E2E Jest config
   ├── __mocks__/
-  │   └── prisma-client.ts                 # Full Prisma mock (all 10 model delegates)
+  │   ├── prisma-client.ts                 # Full Prisma mock (all 10 model delegates)
+  │   └── prisma-enums.ts                  # Jest mock for Prisma v7 ESM enum exports
   └── helpers/
       ├── mock-prisma.helper.ts            # createMockPrismaService() factory
       └── e2e-setup.helper.ts              # createE2EApp() shared e2e bootstrap
@@ -328,7 +356,7 @@ Other:
 |---|---|---|---|
 | `User` | `users` | BE1 | Schema ready + hashedRefreshToken added, no migration yet |
 | `Project` | `projects` | BE2 | Schema ready, no migration yet |
-| `ProjectMember` | `project_members` | BE2 | Schema ready, no migration yet |
+| `ProjectMember` | `project_members` | BE2 | Schema ready + @@index([userId]), no migration yet |
 | `Label` | `labels` | BE2 | Schema ready, no migration yet |
 | `Issue` | `issues` | BE3 | Schema ready, no migration yet |
 | `IssueLabel` | `issue_labels` | BE3 | Schema ready, no migration yet |
@@ -344,7 +372,7 @@ Other:
 - [x] Auth module (JWT, register, login, refresh, logout, rate limiting) — BE1 ✅
 - [x] Users module (profile, avatar upload) — BE6 ✅
 - [x] Upload module (Multer shared) — BE6 ✅
-- [ ] Projects module (CRUD, RBAC, members, labels) — BE2
+- [x] Projects module (CRUD, RBAC, members, labels) — BE2 ✅
 - [ ] Issues module (CRUD, board, attachments, filter) — BE3
 - [ ] Sprints module (lifecycle, backlog) — BE4
 - [ ] Comments module (CRUD, threading) — BE4
@@ -385,3 +413,4 @@ Current reports:
 - `docs/reports/2026-03-19-auth-module-implementation.md` — Auth module implementation (49 tests, 3 testing methodologies)
 - `docs/reports/2026-03-19-users-module-implementation.md` — Users module implementation (8 tests passing)
 - `docs/reports/2026-03-19-branch-summary-auth-users.md` — Vietnamese branch summary (Auth + Users + Upload)
+- `docs/reports/2026-03-20-projects-module-implementation.md` — Projects module: CRUD, RBAC, members, labels (58 unit + 11 e2e tests)

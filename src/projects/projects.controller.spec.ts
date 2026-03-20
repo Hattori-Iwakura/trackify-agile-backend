@@ -1,10 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
+import { ProjectRoleGuard } from './guards/project-role.guard';
+import { PrismaService } from '../prisma/prisma.service';
 
 describe('ProjectsController', () => {
   let controller: ProjectsController;
-  let service: Record<string, jest.Mock>;
+  let service: {
+    create: jest.Mock;
+    findAll: jest.Mock;
+    findOne: jest.Mock;
+    update: jest.Mock;
+    delete: jest.Mock;
+  };
 
   beforeEach(async () => {
     service = {
@@ -12,95 +20,77 @@ describe('ProjectsController', () => {
       findAll: jest.fn(),
       findOne: jest.fn(),
       update: jest.fn(),
-      remove: jest.fn(),
-      addMember: jest.fn(),
-      removeMember: jest.fn(),
-      updateMemberRole: jest.fn(),
+      delete: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProjectsController],
       providers: [{ provide: ProjectsService, useValue: service }],
-    }).compile();
+    })
+      .overrideGuard(ProjectRoleGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<ProjectsController>(ProjectsController);
   });
 
   describe('POST /projects', () => {
     it('should create project and return result', async () => {
-      const dto = { name: 'New', key: 'NEW' };
-      service.create.mockResolvedValue({ id: 'proj-1', ...dto });
+      const dto = { name: 'Test', key: 'TP' };
+      const result = { id: 'proj-1', ...dto, members: [] };
+      service.create.mockResolvedValue(result);
 
-      const result = await controller.create({ id: 'uuid-1' }, dto);
+      const response = await controller.create({ id: 'user-1' }, dto);
 
-      expect(service.create).toHaveBeenCalledWith(dto, 'uuid-1');
-      expect(result).toHaveProperty('id');
+      expect(service.create).toHaveBeenCalledWith(dto, 'user-1');
+      expect(response).toEqual(result);
     });
   });
 
   describe('GET /projects', () => {
-    it('should return paginated list', async () => {
-      service.findAll.mockResolvedValue({ data: [], meta: { total: 0 } });
+    it('should return paginated projects for current user', async () => {
+      const result = { data: [], meta: { total: 0, page: 1, limit: 20, totalPages: 0 } };
+      service.findAll.mockResolvedValue(result);
 
-      const result = await controller.findAll({ id: 'uuid-1' }, { page: 1, limit: 20 });
+      const response = await controller.findAll({ id: 'user-1' }, { page: 1, limit: 20 });
 
-      expect(result).toHaveProperty('data');
+      expect(service.findAll).toHaveBeenCalledWith('user-1', { page: 1, limit: 20 });
+      expect(response).toEqual(result);
     });
   });
 
-  describe('GET /projects/:id', () => {
-    it('should return single project', async () => {
-      service.findOne.mockResolvedValue({ id: 'proj-1', name: 'Test' });
+  describe('GET /projects/:projectId', () => {
+    it('should return project details', async () => {
+      const result = { id: 'proj-1', name: 'Test', _count: { members: 2, labels: 3 } };
+      service.findOne.mockResolvedValue(result);
 
-      const result = await controller.findOne('proj-1');
+      const response = await controller.findOne('proj-1');
 
-      expect(result).toHaveProperty('id', 'proj-1');
+      expect(service.findOne).toHaveBeenCalledWith('proj-1');
+      expect(response).toEqual(result);
     });
   });
 
-  describe('PATCH /projects/:id', () => {
+  describe('PATCH /projects/:projectId', () => {
     it('should update project', async () => {
-      service.update.mockResolvedValue({ id: 'proj-1', name: 'Updated' });
+      const dto = { name: 'Updated' };
+      const result = { id: 'proj-1', name: 'Updated' };
+      service.update.mockResolvedValue(result);
 
-      const result = await controller.update('proj-1', { name: 'Updated' });
+      const response = await controller.update('proj-1', dto);
 
-      expect(result.name).toBe('Updated');
+      expect(service.update).toHaveBeenCalledWith('proj-1', dto);
+      expect(response).toEqual(result);
     });
   });
 
-  describe('DELETE /projects/:id', () => {
+  describe('DELETE /projects/:projectId', () => {
     it('should delete project', async () => {
-      service.remove.mockResolvedValue(undefined);
+      service.delete.mockResolvedValue({ id: 'proj-1' });
 
-      await expect(controller.remove('proj-1')).resolves.not.toThrow();
-    });
-  });
+      const response = await controller.delete('proj-1');
 
-  describe('POST /projects/:id/members', () => {
-    it('should add member', async () => {
-      service.addMember.mockResolvedValue({ userId: 'uuid-2', role: 'MEMBER' });
-
-      const result = await controller.addMember('proj-1', { userId: 'uuid-2', role: 'MEMBER' });
-
-      expect(result.role).toBe('MEMBER');
-    });
-  });
-
-  describe('DELETE /projects/:id/members/:userId', () => {
-    it('should remove member', async () => {
-      service.removeMember.mockResolvedValue(undefined);
-
-      await expect(controller.removeMember('proj-1', 'uuid-2')).resolves.not.toThrow();
-    });
-  });
-
-  describe('PATCH /projects/:id/members/:userId', () => {
-    it('should update member role', async () => {
-      service.updateMemberRole.mockResolvedValue({ role: 'ADMIN' });
-
-      const result = await controller.updateMemberRole('proj-1', 'uuid-2', { role: 'ADMIN' });
-
-      expect(result.role).toBe('ADMIN');
+      expect(service.delete).toHaveBeenCalledWith('proj-1');
     });
   });
 });

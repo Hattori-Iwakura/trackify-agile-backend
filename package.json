@@ -88,7 +88,6 @@
     "testEnvironment": "node",
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "src/projects/",
       "src/issues/",
       "src/sprints/",
       "src/comments/",
@@ -96,6 +95,7 @@
     ],
     "moduleNameMapper": {
       ".*generated/prisma/client(\\.js)?$": "<rootDir>/../test/__mocks__/prisma-client.ts",
+      ".*generated/prisma/enums(\\.js)?$": "<rootDir>/../test/__mocks__/prisma-enums.ts",
       "^(\\.\\..*)\\.js$": "$1"
     }
   }
