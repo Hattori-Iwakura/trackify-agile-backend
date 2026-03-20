@@ -2,8 +2,7 @@
 
 > **This file is the single source of truth for ALL AI agents working on this project.**
 > It is committed to git so every teammate's agent stays aligned.
-> Last updated: 2026-03-20 (Session: Issues module implementation — BE3)
-> Last updated: 2026-03-20 (Session: Projects module implementation — BE2)
+> Last updated: 2026-03-20 (Session: Notifications module implementation — BE5)
 
 ---
 
@@ -229,6 +228,8 @@ Error responses use `HttpExceptionFilter`:
 - `@nestjs/jwt`, `@nestjs/passport`, `passport`, `passport-jwt` (Auth)
 - `bcrypt` (password hashing)
 - `@nestjs/throttler` (rate limiting)
+- `@nestjs/websockets`, `@nestjs/platform-socket.io`, `socket.io` (WebSocket/Socket.io)
+- `@nestjs/event-emitter` (Event-driven decoupling)
 - `zod`, `dotenv`, `rxjs`, `reflect-metadata`
 
 ### Existing Modules & Files
@@ -236,7 +237,7 @@ Error responses use `HttpExceptionFilter`:
 ```
 src/
   ├── main.ts                              # Swagger, global prefix /api, filters, interceptors
-  ├── app.module.ts                        # Root module: ConfigModule, PrismaModule, CommonModule, AuthModule, ProjectsModule, IssuesModule, ThrottlerModule
+  ├── app.module.ts                        # Root module: ConfigModule, PrismaModule, CommonModule, AuthModule, ProjectsModule, IssuesModule, NotificationsModule, ThrottlerModule, EventEmitterModule
   ├── app.controller.ts                    # Default GET /
   ├── app.service.ts                       # Default service
   ├── config/
@@ -335,6 +336,19 @@ src/
   │       ├── update-issue-status.dto.ts # Zod: status (required)
   │       ├── reorder-issue.dto.ts       # Zod: status, position
   │       └── query-issues.dto.ts        # Zod: extends Pagination + filters
+  ├── notifications/                      # ✅ Notifications module (BE5) — IMPLEMENTED
+  │   ├── notifications.module.ts        # NotificationsModule (imports PrismaModule, JwtModule)
+  │   ├── notifications.controller.ts   # GET /notifications, GET /unread-count, PATCH /:id/read, PATCH /read-all
+  │   ├── notifications.service.ts      # create, findAllForUser, markAsRead, markAllAsRead, getUnreadCount
+  │   ├── notifications.listener.ts     # @OnEvent handlers for 7 domain events
+  │   ├── notifications.controller.spec.ts  # 4 tests
+  │   ├── notifications.service.spec.ts     # 6 tests
+  │   ├── notifications.module.spec.ts      # 4 tests
+  │   ├── gateway/
+  │   │   ├── notifications.gateway.ts      # WebSocket: JWT auth, rooms, emit methods
+  │   │   └── notifications.gateway.spec.ts # 8 tests
+  │   └── dto/
+  │       └── create-notification.dto.ts    # Zod: type, title, message, userId, data
   └── health/
       ├── health.controller.ts             # GET /api/health (DB check + uptime)
       └── health.controller.spec.ts        # 2 tests
@@ -395,7 +409,7 @@ Other:
 - [x] Issues module (CRUD, board, attachments, filter) — BE3 ✅
 - [ ] Sprints module (lifecycle, backlog) — BE4
 - [ ] Comments module (CRUD, threading) — BE4
-- [ ] Notifications module (WebSocket gateway, Socket.io) — BE5
+- [x] Notifications module (WebSocket gateway, Socket.io, event-driven) — BE5 ✅
 - [ ] Initial Prisma migration (`prisma migrate dev --name init`)
 - [ ] Seed data for development
 
@@ -434,3 +448,4 @@ Current reports:
 - `docs/reports/2026-03-19-branch-summary-auth-users.md` — Vietnamese branch summary (Auth + Users + Upload)
 - `docs/reports/2026-03-20-projects-module-implementation.md` — Projects module: CRUD, RBAC, members, labels (58 unit + 11 e2e tests)
 - `docs/reports/2026-03-20-issues-module-implementation.md` — Issues module: CRUD, Kanban board, attachments, labels (35 tests)
+- `docs/reports/2026-03-20-notifications-module-implementation.md` — Notifications module: WebSocket gateway, REST API, event-driven (28 tests)

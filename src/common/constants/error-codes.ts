@@ -38,6 +38,9 @@ export enum ErrorCode {
   // Comments
   COMMENT_NOT_FOUND = 'COMMENT_NOT_FOUND',
 
+  // Notifications
+  NOTIFICATION_NOT_FOUND = 'NOTIFICATION_NOT_FOUND',
+
   // File Upload
   FILE_TYPE_NOT_ALLOWED = 'FILE_TYPE_NOT_ALLOWED',
   FILE_TOO_LARGE = 'FILE_TOO_LARGE',
