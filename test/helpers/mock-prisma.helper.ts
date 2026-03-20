@@ -49,9 +49,10 @@ export function createMockPrismaService() {
   };
 
   // Support interactive transactions: $transaction(async (tx) => { ... })
-  mock.$transaction.mockImplementation(async (cbOrArray: any) => {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  mock.$transaction.mockImplementation(async (cbOrArray: unknown) => {
     if (typeof cbOrArray === 'function') {
-      return cbOrArray(mock);
+      return (cbOrArray as (tx: typeof mock) => unknown)(mock);
     }
     return cbOrArray;
   });
