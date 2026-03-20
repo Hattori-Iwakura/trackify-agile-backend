@@ -82,7 +82,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_SCANNER_OPTS: "-Xmx512m -Xms128m"
+          SONAR_SCANNER_OPTS: "-Xmx1024m -Xms256m"
         run: |
           sonar-scanner -D"sonar.token=$env:SONAR_TOKEN" -D"sonar.host.url=$env:SONAR_HOST_URL"
 
