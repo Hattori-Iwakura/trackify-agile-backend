@@ -3,6 +3,7 @@
 > **This file is the single source of truth for ALL AI agents working on this project.**
 > It is committed to git so every teammate's agent stays aligned.
 > Last updated: 2026-03-20 (Session: Issues module implementation — BE3)
+> Last updated: 2026-03-20 (Session: Projects module implementation — BE2)
 
 ---
 
