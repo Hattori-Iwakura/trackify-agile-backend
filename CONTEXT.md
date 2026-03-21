@@ -2,7 +2,7 @@
 
 > **This file is the single source of truth for ALL AI agents working on this project.**
 > It is committed to git so every teammate's agent stays aligned.
-> Last updated: 2026-03-20 (Session: Notifications module implementation — BE5)
+> Last updated: 2026-03-21 (Session: Sprints & Comments module implementation — BE4)
 
 ---
 
@@ -237,7 +237,7 @@ Error responses use `HttpExceptionFilter`:
 ```
 src/
   ├── main.ts                              # Swagger, global prefix /api, filters, interceptors
-  ├── app.module.ts                        # Root module: ConfigModule, PrismaModule, CommonModule, AuthModule, ProjectsModule, IssuesModule, NotificationsModule, ThrottlerModule, EventEmitterModule
+  ├── app.module.ts                        # Root module: ConfigModule, PrismaModule, CommonModule, AuthModule, ProjectsModule, IssuesModule, SprintsModule, CommentsModule, NotificationsModule, ThrottlerModule, EventEmitterModule
   ├── app.controller.ts                    # Default GET /
   ├── app.service.ts                       # Default service
   ├── config/
@@ -336,6 +336,26 @@ src/
   │       ├── update-issue-status.dto.ts # Zod: status (required)
   │       ├── reorder-issue.dto.ts       # Zod: status, position
   │       └── query-issues.dto.ts        # Zod: extends Pagination + filters
+  ├── sprints/                              # ✅ Sprints module (BE4) — IMPLEMENTED
+  │   ├── sprints.module.ts              # SprintsModule
+  │   ├── sprints.controller.ts          # 10 endpoints: CRUD + lifecycle + backlog + issue management
+  │   ├── sprints.service.ts             # Business logic + event emission
+  │   ├── sprints.controller.spec.ts     # 9 tests
+  │   ├── sprints.service.spec.ts        # 13 tests
+  │   ├── sprints.module.spec.ts         # 3 tests
+  │   └── dto/
+  │       ├── create-sprint.dto.ts       # Zod: name, goal, startDate, endDate (date validation)
+  │       └── update-sprint.dto.ts       # Zod: all optional
+  ├── comments/                            # ✅ Comments module (BE4) — IMPLEMENTED
+  │   ├── comments.module.ts             # CommentsModule
+  │   ├── comments.controller.ts         # 4 endpoints: CRUD with threading
+  │   ├── comments.service.ts            # Business logic + resolveIssueByKey + author-or-admin moderation
+  │   ├── comments.controller.spec.ts    # 4 tests
+  │   ├── comments.service.spec.ts       # 9 tests
+  │   ├── comments.module.spec.ts        # 3 tests
+  │   └── dto/
+  │       ├── create-comment.dto.ts      # Zod: content, parentId (optional UUID)
+  │       └── update-comment.dto.ts      # Zod: content
   ├── notifications/                      # ✅ Notifications module (BE5) — IMPLEMENTED
   │   ├── notifications.module.ts        # NotificationsModule (imports PrismaModule, JwtModule)
   │   ├── notifications.controller.ts   # GET /notifications, GET /unread-count, PATCH /:id/read, PATCH /read-all
@@ -407,8 +427,8 @@ Other:
 - [x] Upload module (Multer shared) — BE6 ✅
 - [x] Projects module (CRUD, RBAC, members, labels) — BE2 ✅
 - [x] Issues module (CRUD, board, attachments, filter) — BE3 ✅
-- [ ] Sprints module (lifecycle, backlog) — BE4
-- [ ] Comments module (CRUD, threading) — BE4
+- [x] Sprints module (lifecycle, backlog, issue management) — BE4 ✅
+- [x] Comments module (CRUD, threading, moderation) — BE4 ✅
 - [x] Notifications module (WebSocket gateway, Socket.io, event-driven) — BE5 ✅
 - [ ] Initial Prisma migration (`prisma migrate dev --name init`)
 - [ ] Seed data for development
@@ -449,3 +469,4 @@ Current reports:
 - `docs/reports/2026-03-20-projects-module-implementation.md` — Projects module: CRUD, RBAC, members, labels (58 unit + 11 e2e tests)
 - `docs/reports/2026-03-20-issues-module-implementation.md` — Issues module: CRUD, Kanban board, attachments, labels (35 tests)
 - `docs/reports/2026-03-20-notifications-module-implementation.md` — Notifications module: WebSocket gateway, REST API, event-driven (28 tests)
+- `docs/reports/2026-03-21-sprints-comments-implementation.md` — Sprints & Comments modules: lifecycle, threading, moderation, event integration (41 unit + 18 e2e tests)

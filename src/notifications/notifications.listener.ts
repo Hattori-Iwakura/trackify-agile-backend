@@ -24,7 +24,19 @@ export interface CommentAddedEvent {
   commentId: string;
   authorId: string;
   content: string;
+  parentId: string | null;
   issueReporterId: string;
+}
+
+export interface CommentUpdatedEvent {
+  issueKey: string;
+  commentId: string;
+  content: string;
+}
+
+export interface CommentDeletedEvent {
+  issueKey: string;
+  commentId: string;
 }
 
 export interface MemberInvitedEvent {
@@ -96,6 +108,7 @@ export class NotificationsListener {
         id: event.commentId,
         content: event.content,
         authorId: event.authorId,
+        parentId: event.parentId,
       });
 
       if (event.issueReporterId !== event.authorId) {
@@ -182,6 +195,31 @@ export class NotificationsListener {
       this.gateway.emitNotification(event.mentionedUserId, notification);
     } catch (error) {
       this.logger.error(`Failed to handle user.mentioned: ${event.mentionedUserId}`, error);
+    }
+  }
+
+  @OnEvent('comment.updated')
+  async handleCommentUpdated(event: CommentUpdatedEvent) {
+    try {
+      this.logger.log(`comment.updated: ${event.commentId} in ${event.issueKey}`);
+      this.gateway.emitCommentUpdated(event.issueKey, {
+        id: event.commentId,
+        content: event.content,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to handle comment.updated: ${event.commentId}`, error);
+    }
+  }
+
+  @OnEvent('comment.deleted')
+  async handleCommentDeleted(event: CommentDeletedEvent) {
+    try {
+      this.logger.log(`comment.deleted: ${event.commentId} in ${event.issueKey}`);
+      this.gateway.emitCommentDeleted(event.issueKey, {
+        id: event.commentId,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to handle comment.deleted: ${event.commentId}`, error);
     }
   }
 }

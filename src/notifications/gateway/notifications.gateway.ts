@@ -59,4 +59,12 @@ export class NotificationsGateway implements OnGatewayConnection {
   emitNotification(userId: string, payload: any) {
     this.server.to(`user:${userId}`).emit('notification:new', payload);
   }
+
+  emitCommentUpdated(issueKey: string, payload: any) {
+    this.server.to(`issue:${issueKey}`).emit('comment:updated', payload);
+  }
+
+  emitCommentDeleted(issueKey: string, payload: any) {
+    this.server.to(`issue:${issueKey}`).emit('comment:deleted', payload);
+  }
 }

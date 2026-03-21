@@ -91,9 +91,7 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "testPathIgnorePatterns": [
-      "/node_modules/",
-      "src/sprints/",
-      "src/comments/"
+      "/node_modules/"
     ],
     "moduleNameMapper": {
       ".*generated/prisma/client(\\.js)?$": "<rootDir>/../test/__mocks__/prisma-client.ts",
