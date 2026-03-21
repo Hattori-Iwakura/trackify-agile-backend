@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CommentsService } from './comments.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { createMockPrismaService } from '../../test/helpers/mock-prisma.helper';
@@ -15,6 +16,7 @@ describe('CommentsService', () => {
       providers: [
         CommentsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 
@@ -23,7 +25,12 @@ describe('CommentsService', () => {
 
   describe('create', () => {
     it('should create a comment on an issue', async () => {
-      prisma.issue.findUnique.mockResolvedValue({ id: 'issue-1' });
+      prisma.issue.findUnique.mockResolvedValue({
+        id: 'issue-1',
+        issueKey: 'TRK-1',
+        projectId: 'proj-1',
+        reporterId: 'reporter-1',
+      });
       prisma.comment.create.mockResolvedValue({
         id: 'comment-1',
         content: 'This is a comment',
@@ -39,7 +46,13 @@ describe('CommentsService', () => {
     });
 
     it('should create a threaded reply with parentId', async () => {
-      prisma.issue.findUnique.mockResolvedValue({ id: 'issue-1' });
+      prisma.issue.findUnique.mockResolvedValue({
+        id: 'issue-1',
+        issueKey: 'TRK-1',
+        projectId: 'proj-1',
+        reporterId: 'reporter-1',
+      });
+      prisma.comment.findUnique.mockResolvedValue({ id: 'comment-1', issueId: 'issue-1' });
       prisma.comment.create.mockResolvedValue({
         id: 'comment-2',
         content: 'Reply to comment',
@@ -88,6 +101,7 @@ describe('CommentsService', () => {
       prisma.comment.findUnique.mockResolvedValue({
         id: 'comment-1',
         authorId: 'uuid-1',
+        issue: { issueKey: 'TRK-1' },
       });
       prisma.comment.update.mockResolvedValue({
         id: 'comment-1',
@@ -105,6 +119,7 @@ describe('CommentsService', () => {
       prisma.comment.findUnique.mockResolvedValue({
         id: 'comment-1',
         authorId: 'other-user',
+        issue: { issueKey: 'TRK-1' },
       });
 
       await expect(
@@ -126,6 +141,7 @@ describe('CommentsService', () => {
       prisma.comment.findUnique.mockResolvedValue({
         id: 'comment-1',
         authorId: 'uuid-1',
+        issue: { issueKey: 'TRK-1' },
       });
       prisma.comment.delete.mockResolvedValue({});
 
@@ -136,6 +152,7 @@ describe('CommentsService', () => {
       prisma.comment.findUnique.mockResolvedValue({
         id: 'comment-1',
         authorId: 'other-user',
+        issue: { issueKey: 'TRK-1' },
       });
 
       await expect(service.remove('comment-1', 'uuid-1')).rejects.toThrow(

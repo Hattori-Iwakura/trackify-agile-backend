@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommentsController } from './comments.controller';
 import { CommentsService } from './comments.service';
+import { ProjectRoleGuard } from '../projects/guards/project-role.guard';
 
 describe('CommentsController', () => {
   let controller: CommentsController;
@@ -12,12 +13,21 @@ describe('CommentsController', () => {
       findAllForIssue: jest.fn(),
       update: jest.fn(),
       remove: jest.fn(),
+      resolveIssueByKey: jest.fn().mockResolvedValue({
+        id: 'issue-1',
+        issueKey: 'TRK-1',
+        projectId: 'proj-1',
+        reporterId: 'reporter-1',
+      }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CommentsController],
       providers: [{ provide: CommentsService, useValue: service }],
-    }).compile();
+    })
+      .overrideGuard(ProjectRoleGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<CommentsController>(CommentsController);
   });
@@ -31,9 +41,13 @@ describe('CommentsController', () => {
         authorId: 'uuid-1',
       });
 
-      const result = await controller.create('issue-1', { id: 'uuid-1' }, dto);
+      const result = await controller.create('TRK-1', { id: 'uuid-1' }, dto, 'proj-1');
 
-      expect(service.create).toHaveBeenCalledWith('issue-1', 'uuid-1', dto);
+      expect(service.resolveIssueByKey).toHaveBeenCalledWith('proj-1', 'TRK-1');
+      expect(service.create).toHaveBeenCalledWith('issue-1', 'uuid-1', dto, {
+        projectId: 'proj-1',
+        issueKey: 'TRK-1',
+      });
       expect(result).toHaveProperty('content', 'Great progress!');
     });
   });
@@ -44,8 +58,9 @@ describe('CommentsController', () => {
         { id: 'comment-1', replies: [] },
       ]);
 
-      const result = await controller.findAll('issue-1');
+      const result = await controller.findAll('TRK-1', 'proj-1');
 
+      expect(service.resolveIssueByKey).toHaveBeenCalledWith('proj-1', 'TRK-1');
       expect(result).toHaveLength(1);
     });
   });
@@ -57,10 +72,12 @@ describe('CommentsController', () => {
         content: 'Updated',
       });
 
+      const mockReq = { projectMember: { role: 'MEMBER' } };
       const result = await controller.update('comment-1', { id: 'uuid-1' }, {
         content: 'Updated',
-      });
+      }, mockReq);
 
+      expect(service.update).toHaveBeenCalledWith('comment-1', 'uuid-1', { content: 'Updated' }, 'MEMBER');
       expect(result.content).toBe('Updated');
     });
   });
@@ -69,9 +86,11 @@ describe('CommentsController', () => {
     it('should delete comment', async () => {
       service.remove.mockResolvedValue(undefined);
 
+      const mockReq = { projectMember: { role: 'OWNER' } };
       await expect(
-        controller.remove('comment-1', { id: 'uuid-1' }),
+        controller.remove('comment-1', { id: 'uuid-1' }, mockReq),
       ).resolves.not.toThrow();
+      expect(service.remove).toHaveBeenCalledWith('comment-1', 'uuid-1', 'OWNER');
     });
   });
 });

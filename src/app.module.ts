@@ -11,6 +11,8 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ProjectsModule } from './projects/projects.module';
 import { IssuesModule } from './issues/issues.module';
+import { SprintsModule } from './sprints/sprints.module';
+import { CommentsModule } from './comments/comments.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { HealthController } from './health/health.controller';
 import { validateEnv } from './config/env.validation';
@@ -34,6 +36,8 @@ import { validateEnv } from './config/env.validation';
     UsersModule,
     ProjectsModule,
     IssuesModule,
+    SprintsModule,
+    CommentsModule,
     EventEmitterModule.forRoot(),
     NotificationsModule,
   ],

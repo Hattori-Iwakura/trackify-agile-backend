@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SprintsService } from './sprints.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { createMockPrismaService } from '../../test/helpers/mock-prisma.helper';
@@ -15,6 +16,7 @@ describe('SprintsService', () => {
       providers: [
         SprintsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 
@@ -91,12 +93,15 @@ describe('SprintsService', () => {
         id: 'sprint-1',
         status: 'PLANNING',
         projectId: 'proj-1',
+        startDate: new Date('2026-03-15'),
+        endDate: new Date('2026-03-29'),
       });
       prisma.sprint.findFirst.mockResolvedValue(null);
       prisma.sprint.update.mockResolvedValue({
         id: 'sprint-1',
         status: 'ACTIVE',
       });
+      prisma.projectMember.findMany.mockResolvedValue([]);
 
       const result = await service.start('sprint-1');
 
@@ -115,7 +120,7 @@ describe('SprintsService', () => {
       );
     });
 
-    it('should throw BadRequestException if another sprint is already ACTIVE', async () => {
+    it('should throw ConflictException if another sprint is already ACTIVE', async () => {
       prisma.sprint.findUnique.mockResolvedValue({
         id: 'sprint-1',
         status: 'PLANNING',
@@ -127,7 +132,7 @@ describe('SprintsService', () => {
       });
 
       await expect(service.start('sprint-1')).rejects.toThrow(
-        BadRequestException,
+        ConflictException,
       );
     });
   });
@@ -142,6 +147,7 @@ describe('SprintsService', () => {
         id: 'sprint-1',
         status: 'COMPLETED',
       });
+      prisma.projectMember.findMany.mockResolvedValue([]);
 
       const result = await service.complete('sprint-1');
 
@@ -175,12 +181,13 @@ describe('SprintsService', () => {
 
   describe('addIssueToSprint', () => {
     it('should assign issue to sprint', async () => {
+      prisma.issue.findUnique.mockResolvedValue({ id: 'issue-1' });
       prisma.issue.update.mockResolvedValue({
         id: 'issue-1',
         sprintId: 'sprint-1',
       });
 
-      const result = await service.addIssueToSprint('sprint-1', 'issue-1');
+      const result = await service.addIssueToSprint('sprint-1', 'PROJ-1', 'proj-1');
 
       expect(result.sprintId).toBe('sprint-1');
     });
@@ -188,12 +195,13 @@ describe('SprintsService', () => {
 
   describe('removeIssueFromSprint', () => {
     it('should unassign issue from sprint', async () => {
+      prisma.issue.findUnique.mockResolvedValue({ id: 'issue-1' });
       prisma.issue.update.mockResolvedValue({
         id: 'issue-1',
         sprintId: null,
       });
 
-      const result = await service.removeIssueFromSprint('sprint-1', 'issue-1');
+      const result = await service.removeIssueFromSprint('sprint-1', 'PROJ-1', 'proj-1');
 
       expect(result.sprintId).toBeNull();
     });

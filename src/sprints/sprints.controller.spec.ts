@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SprintsController } from './sprints.controller';
 import { SprintsService } from './sprints.service';
+import { ProjectRoleGuard } from '../projects/guards/project-role.guard';
 
 describe('SprintsController', () => {
   let controller: SprintsController;
@@ -23,7 +24,10 @@ describe('SprintsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SprintsController],
       providers: [{ provide: SprintsService, useValue: service }],
-    }).compile();
+    })
+      .overrideGuard(ProjectRoleGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<SprintsController>(SprintsController);
   });
@@ -104,8 +108,9 @@ describe('SprintsController', () => {
     it('should add issue to sprint', async () => {
       service.addIssueToSprint.mockResolvedValue({ id: 'issue-1', sprintId: 'sprint-1' });
 
-      const result = await controller.addIssue('sprint-1', 'issue-1');
+      const result = await controller.addIssue('sprint-1', 'PROJ-1', 'proj-1');
 
+      expect(service.addIssueToSprint).toHaveBeenCalledWith('sprint-1', 'PROJ-1', 'proj-1');
       expect(result.sprintId).toBe('sprint-1');
     });
   });
@@ -114,7 +119,7 @@ describe('SprintsController', () => {
     it('should remove issue from sprint', async () => {
       service.removeIssueFromSprint.mockResolvedValue({ id: 'issue-1', sprintId: null });
 
-      await expect(controller.removeIssue('sprint-1', 'issue-1')).resolves.not.toThrow();
+      await expect(controller.removeIssue('sprint-1', 'PROJ-1', 'proj-1')).resolves.not.toThrow();
     });
   });
 });
