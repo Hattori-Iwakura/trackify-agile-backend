@@ -119,7 +119,10 @@ describe('SprintsController', () => {
     it('should remove issue from sprint', async () => {
       service.removeIssueFromSprint.mockResolvedValue({ id: 'issue-1', sprintId: null });
 
-      await expect(controller.removeIssue('sprint-1', 'PROJ-1', 'proj-1')).resolves.not.toThrow();
+      const result = await controller.removeIssue('sprint-1', 'PROJ-1', 'proj-1');
+
+      expect(service.removeIssueFromSprint).toHaveBeenCalledWith('sprint-1', 'PROJ-1', 'proj-1');
+      expect(result.sprintId).toBeNull();
     });
   });
 });

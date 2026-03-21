@@ -145,7 +145,9 @@ describe('CommentsService', () => {
       });
       prisma.comment.delete.mockResolvedValue({});
 
-      await expect(service.remove('comment-1', 'uuid-1')).resolves.not.toThrow();
+      await service.remove('comment-1', 'uuid-1');
+
+      expect(prisma.comment.delete).toHaveBeenCalledWith({ where: { id: 'comment-1' } });
     });
 
     it('should throw ForbiddenException if not the author', async () => {

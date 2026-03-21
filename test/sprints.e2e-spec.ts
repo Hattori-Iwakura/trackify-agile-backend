@@ -74,11 +74,13 @@ describe('Sprints (e2e)', () => {
       const token = await loginAndGetToken();
       mockMembership();
 
-      return request(app.getHttpServer())
+      const res = await request(app.getHttpServer())
         .post(`/api/projects/${PROJECT_ID}/sprints`)
         .set('Authorization', `Bearer ${token}`)
-        .send({})
-        .expect(400);
+        .send({});
+
+      expect(res.status).toBe(400);
+      expect(res.body).toHaveProperty('message');
     });
 
     it('should return 401 without auth', () => {
@@ -137,10 +139,12 @@ describe('Sprints (e2e)', () => {
         projectId: PROJECT_ID,
       });
 
-      return request(app.getHttpServer())
+      const res = await request(app.getHttpServer())
         .post(`/api/projects/${PROJECT_ID}/sprints/${SPRINT_ID}/start`)
-        .set('Authorization', `Bearer ${token}`)
-        .expect(400);
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(400);
+      expect(res.body).toHaveProperty('message');
     });
   });
 
@@ -174,10 +178,12 @@ describe('Sprints (e2e)', () => {
       mockMembership();
       prisma.issue.findMany.mockResolvedValue([]);
 
-      return request(app.getHttpServer())
+      const res = await request(app.getHttpServer())
         .get(`/api/projects/${PROJECT_ID}/backlog`)
-        .set('Authorization', `Bearer ${token}`)
-        .expect(200);
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body.data)).toBe(true);
     });
   });
 
