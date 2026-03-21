@@ -6,12 +6,14 @@ import { SprintsService } from './sprints.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 describe('SprintsModule', () => {
-  it('should compile the module', async () => {
+  it('should compile the module with all providers', async () => {
     const module = await Test.createTestingModule({
       imports: [PrismaModule, EventEmitterModule.forRoot(), SprintsModule],
     }).compile();
 
     expect(module).toBeDefined();
+    expect(module.get(SprintsController)).toBeInstanceOf(SprintsController);
+    expect(module.get(SprintsService)).toBeInstanceOf(SprintsService);
   });
 
   it('should have SprintsController defined', async () => {

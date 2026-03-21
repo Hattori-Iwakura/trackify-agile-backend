@@ -6,12 +6,14 @@ import { CommentsService } from './comments.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 describe('CommentsModule', () => {
-  it('should compile the module', async () => {
+  it('should compile the module with all providers', async () => {
     const module = await Test.createTestingModule({
       imports: [PrismaModule, EventEmitterModule.forRoot(), CommentsModule],
     }).compile();
 
     expect(module).toBeDefined();
+    expect(module.get(CommentsController)).toBeInstanceOf(CommentsController);
+    expect(module.get(CommentsService)).toBeInstanceOf(CommentsService);
   });
 
   it('should have CommentsController defined', async () => {

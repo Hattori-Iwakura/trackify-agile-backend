@@ -105,11 +105,13 @@ describe('Comments (e2e)', () => {
       const token = await loginAndGetToken();
       mockMembership();
 
-      return request(app.getHttpServer())
+      const res = await request(app.getHttpServer())
         .post(`/api/projects/${PROJECT_ID}/issues/TRK-1/comments`)
         .set('Authorization', `Bearer ${token}`)
-        .send({})
-        .expect(400);
+        .send({});
+
+      expect(res.status).toBe(400);
+      expect(res.body).toHaveProperty('message');
     });
 
     it('should return 401 without auth', () => {
@@ -134,10 +136,13 @@ describe('Comments (e2e)', () => {
         { id: 'comment-1', content: 'Root', replies: [] },
       ]);
 
-      return request(app.getHttpServer())
+      const res = await request(app.getHttpServer())
         .get(`/api/projects/${PROJECT_ID}/issues/TRK-1/comments`)
-        .set('Authorization', `Bearer ${token}`)
-        .expect(200);
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(res.body.data[0]).toHaveProperty('content', 'Root');
     });
   });
 
@@ -173,11 +178,13 @@ describe('Comments (e2e)', () => {
         issue: { issueKey: 'TRK-1' },
       });
 
-      return request(app.getHttpServer())
+      const res = await request(app.getHttpServer())
         .patch(`/api/projects/${PROJECT_ID}/issues/TRK-1/comments/${COMMENT_ID}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ content: 'Hacked' })
-        .expect(403);
+        .send({ content: 'Hacked' });
+
+      expect(res.status).toBe(403);
+      expect(res.body).toHaveProperty('message');
     });
   });
 
@@ -192,10 +199,12 @@ describe('Comments (e2e)', () => {
       });
       prisma.comment.delete.mockResolvedValue({});
 
-      return request(app.getHttpServer())
+      const res = await request(app.getHttpServer())
         .delete(`/api/projects/${PROJECT_ID}/issues/TRK-1/comments/${COMMENT_ID}`)
-        .set('Authorization', `Bearer ${token}`)
-        .expect(200);
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('message');
     });
   });
 });
