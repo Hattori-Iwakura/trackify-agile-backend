@@ -43,7 +43,7 @@ cd <path-to-infrastructure-repo>
 docker-compose up -d
 ```
 
-This starts PostgreSQL (`postgres-app:5432`), Nginx, n8n, and SonarQube.
+This starts PostgreSQL (**trên máy host: `localhost:5434`** → cổng 5432 trong container), n8n, SonarQube, v.v. Prisma trên Windows/WSL dùng port **5434** trong `DATABASE_URL` để không đụng PostgreSQL cài sẵn thường chiếm `:5432`.
 
 ### 2. Run the backend
 

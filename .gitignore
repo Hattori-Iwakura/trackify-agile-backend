@@ -43,3 +43,7 @@ Thumbs.db
 # Internal docs (keep docs/reports/ tracked for AI agent context)
 docs/*
 !docs/reports/
+!docs/workspace-changes-*.md
+
+# TypeScript build info
+*.tsbuildinfo

@@ -1,6 +1,8 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  // Nest + tsc emit CommonJS; ESM client (import.meta) bị compile sai → "exports is not defined"
+  moduleFormat = "cjs"
 }
 
 datasource db {

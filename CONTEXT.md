@@ -2,7 +2,7 @@
 
 > **This file is the single source of truth for ALL AI agents working on this project.**
 > It is committed to git so every teammate's agent stays aligned.
-> Last updated: 2026-03-21 (Session: Sprints & Comments module implementation — BE4)
+> Last updated: 2026-03-22 (Throttler defaults relaxed; health endpoint SkipThrottle)
 
 ---
 
@@ -227,7 +227,7 @@ Error responses use `HttpExceptionFilter`:
 - `@prisma/client` (v7.5), `prisma` (v7.5)
 - `@nestjs/jwt`, `@nestjs/passport`, `passport`, `passport-jwt` (Auth)
 - `bcrypt` (password hashing)
-- `@nestjs/throttler` (rate limiting)
+- `@nestjs/throttler` (rate limiting — mặc định ~40/s, 200/10s, 1000/phút; `GET /health` bỏ qua throttle)
 - `@nestjs/websockets`, `@nestjs/platform-socket.io`, `socket.io` (WebSocket/Socket.io)
 - `@nestjs/event-emitter` (Event-driven decoupling)
 - `zod`, `dotenv`, `rxjs`, `reflect-metadata`
@@ -470,3 +470,4 @@ Current reports:
 - `docs/reports/2026-03-20-issues-module-implementation.md` — Issues module: CRUD, Kanban board, attachments, labels (35 tests)
 - `docs/reports/2026-03-20-notifications-module-implementation.md` — Notifications module: WebSocket gateway, REST API, event-driven (28 tests)
 - `docs/reports/2026-03-21-sprints-comments-implementation.md` — Sprints & Comments modules: lifecycle, threading, moderation, event integration (41 unit + 18 e2e tests)
+- `docs/reports/2026-03-22-throttler-defaults-relaxed.md` — Global throttler limits raised; health `SkipThrottle`

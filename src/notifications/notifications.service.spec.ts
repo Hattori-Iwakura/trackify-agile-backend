@@ -28,7 +28,7 @@ describe('NotificationsService', () => {
         type: 'ISSUE_ASSIGNED',
         message: 'You were assigned TRK-1',
         userId: 'uuid-1',
-        read: false,
+        isRead: false,
       });
 
       const result = await service.create({
@@ -38,7 +38,7 @@ describe('NotificationsService', () => {
       });
 
       expect(result).toHaveProperty('type', 'ISSUE_ASSIGNED');
-      expect(result.read).toBe(false);
+      expect(result.isRead).toBe(false);
     });
   });
 
@@ -63,16 +63,16 @@ describe('NotificationsService', () => {
       prisma.notification.findUnique.mockResolvedValue({
         id: 'notif-1',
         userId: 'uuid-1',
-        read: false,
+        isRead: false,
       });
       prisma.notification.update.mockResolvedValue({
         id: 'notif-1',
-        read: true,
+        isRead: true,
       });
 
       const result = await service.markAsRead('notif-1', 'uuid-1');
 
-      expect(result.read).toBe(true);
+      expect(result.isRead).toBe(true);
     });
 
     it('should throw NotFoundException for non-existent notification', async () => {
@@ -93,7 +93,7 @@ describe('NotificationsService', () => {
       expect(result).toHaveProperty('count', 5);
       expect(prisma.notification.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ userId: 'uuid-1', read: false }),
+          where: expect.objectContaining({ userId: 'uuid-1', isRead: false }),
         }),
       );
     });
@@ -108,7 +108,7 @@ describe('NotificationsService', () => {
       expect(result).toBe(3);
       expect(prisma.notification.count).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ userId: 'uuid-1', read: false }),
+          where: expect.objectContaining({ userId: 'uuid-1', isRead: false }),
         }),
       );
     });
