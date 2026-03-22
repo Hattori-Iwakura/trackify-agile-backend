@@ -23,11 +23,12 @@ import { validateEnv } from './config/env.validation';
       isGlobal: true,
       validate: validateEnv,
     }),
+    // Giới hạn toàn cục (theo IP mặc định). Trước đây short=3/giây khiến SPA + React Strict Mode dễ 429.
     ThrottlerModule.forRoot({
       throttlers: [
-        { name: 'short', ttl: 1000, limit: 3 },
-        { name: 'medium', ttl: 10000, limit: 20 },
-        { name: 'long', ttl: 60000, limit: 100 },
+        { name: 'short', ttl: 1000, limit: 40 },
+        { name: 'medium', ttl: 10000, limit: 200 },
+        { name: 'long', ttl: 60000, limit: 1000 },
       ],
     }),
     PrismaModule,

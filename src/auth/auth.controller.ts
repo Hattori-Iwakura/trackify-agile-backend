@@ -33,8 +33,8 @@ export class AuthController {
 
   @Post('register')
   @Throttle({
-    short: { ttl: 1000, limit: 1 },
-    medium: { ttl: 60000, limit: 5 },
+    short: { ttl: 1000, limit: 10 },
+    medium: { ttl: 60000, limit: 30 },
   })
   @UsePipes(new ZodValidationPipe(RegisterSchema))
   @ApiOperation({ summary: 'Register a new user' })
@@ -71,8 +71,8 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Throttle({
-    short: { ttl: 1000, limit: 1 },
-    medium: { ttl: 60000, limit: 5 },
+    short: { ttl: 1000, limit: 10 },
+    medium: { ttl: 60000, limit: 30 },
   })
   @UsePipes(new ZodValidationPipe(LoginSchema))
   @ApiOperation({ summary: 'Login with email and password' })

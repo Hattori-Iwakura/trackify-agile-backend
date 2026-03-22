@@ -67,20 +67,20 @@ export class NotificationsService {
 
     return this.prisma.notification.update({
       where: { id },
-      data: { read: true } as any,
+      data: { isRead: true },
     });
   }
 
   async markAllAsRead(userId: string) {
     return this.prisma.notification.updateMany({
-      where: { userId, read: false } as any,
-      data: { read: true } as any,
+      where: { userId, isRead: false },
+      data: { isRead: true },
     });
   }
 
   async getUnreadCount(userId: string): Promise<number> {
     return this.prisma.notification.count({
-      where: { userId, read: false } as any,
+      where: { userId, isRead: false },
     });
   }
 }
