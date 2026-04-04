@@ -2,7 +2,7 @@
 
 > **This file is the single source of truth for ALL AI agents working on this project.**
 > It is committed to git so every teammate's agent stays aligned.
-> Last updated: 2026-03-21 (Session: Sprints & Comments module implementation — BE4)
+> Last updated: 2026-03-28 (Session: Infrastructure hardening & Global Admin module — BE6)
 
 ---
 
@@ -231,13 +231,16 @@ Error responses use `HttpExceptionFilter`:
 - `@nestjs/websockets`, `@nestjs/platform-socket.io`, `socket.io` (WebSocket/Socket.io)
 - `@nestjs/event-emitter` (Event-driven decoupling)
 - `zod`, `dotenv`, `rxjs`, `reflect-metadata`
+- `helmet` (HTTP security headers)
+- `compression` (response gzip compression)
+- `@nestjs/cache-manager`, `cache-manager` (in-memory caching)
 
 ### Existing Modules & Files
 
 ```
 src/
   ├── main.ts                              # Swagger, global prefix /api, filters, interceptors
-  ├── app.module.ts                        # Root module: ConfigModule, PrismaModule, CommonModule, AuthModule, ProjectsModule, IssuesModule, SprintsModule, CommentsModule, NotificationsModule, ThrottlerModule, EventEmitterModule
+  ├── app.module.ts                        # Root module: ConfigModule, CacheModule, PrismaModule, CommonModule, AuthModule, ProjectsModule, IssuesModule, SprintsModule, CommentsModule, NotificationsModule, AdminModule, ThrottlerModule, EventEmitterModule
   ├── app.controller.ts                    # Default GET /
   ├── app.service.ts                       # Default service
   ├── config/
@@ -263,18 +266,25 @@ src/
   │       ├── jwt-auth.guard.ts            # AuthGuard('jwt')
   │       └── jwt-auth.guard.spec.ts       # 2 tests
   ├── common/
-  │   ├── common.module.ts                 # Common module
+  │   ├── common.module.ts                 # Common module (registers CorrelationIdMiddleware)
   │   ├── constants/
   │   │   └── error-codes.ts               # ErrorCode enum (shared across all modules)
   │   ├── decorators/
-  │   │   └── current-user.decorator.ts    # @CurrentUser() param decorator
+  │   │   ├── current-user.decorator.ts    # @CurrentUser() param decorator
+  │   │   └── require-global-role.decorator.ts  # @RequireGlobalRoles() metadata decorator
+  │   ├── guards/
+  │   │   ├── global-role.guard.ts         # Checks user.role against GlobalRole enum
+  │   │   └── global-role.guard.spec.ts    # 5 tests
+  │   ├── middleware/
+  │   │   ├── correlation-id.middleware.ts  # x-correlation-id header generation/propagation
+  │   │   └── correlation-id.middleware.spec.ts # 3 tests
   │   ├── pipes/
   │   │   └── zod-validation.pipe.ts       # ZodValidationPipe
   │   ├── filters/
-  │   │   └── http-exception.filter.ts     # Global exception filter
+  │   │   └── http-exception.filter.ts     # Global exception filter (with correlation ID)
   │   ├── interceptors/
   │   │   ├── transform.interceptor.ts     # Response wrapper { statusCode, data, timestamp }
-  │   │   └── logging.interceptor.ts       # Request logger METHOD /url STATUS - Xms
+  │   │   └── logging.interceptor.ts       # Request logger [correlationId] METHOD /url STATUS - Xms
   │   └── dto/
   │       └── pagination.dto.ts            # PaginationSchema + PaginatedResult<T>
   ├── upload/                               # ✅ Upload module (BE6) — IMPLEMENTED
@@ -369,6 +379,15 @@ src/
   │   │   └── notifications.gateway.spec.ts # 8 tests
   │   └── dto/
   │       └── create-notification.dto.ts    # Zod: type, title, message, userId, data
+  ├── admin/                               # ✅ Admin module (BE6) — IMPLEMENTED
+  │   ├── admin.module.ts                  # AdminModule
+  │   ├── admin.controller.ts              # 4 endpoints: GET users, GET stats, PATCH role, DELETE user
+  │   ├── admin.service.ts                 # User management + system stats
+  │   ├── admin.controller.spec.ts         # 4 tests
+  │   ├── admin.service.spec.ts            # 9 tests
+  │   ├── admin.module.spec.ts             # 3 tests
+  │   └── dto/
+  │       └── update-user-role.dto.ts      # Zod: role (ADMIN/USER)
   └── health/
       ├── health.controller.ts             # GET /api/health (DB check + uptime)
       └── health.controller.spec.ts        # 2 tests
@@ -430,8 +449,9 @@ Other:
 - [x] Sprints module (lifecycle, backlog, issue management) — BE4 ✅
 - [x] Comments module (CRUD, threading, moderation) — BE4 ✅
 - [x] Notifications module (WebSocket gateway, Socket.io, event-driven) — BE5 ✅
+- [x] Admin module (global user management, system stats) — BE6 ✅
+- [x] Seed data for development (`prisma/seed.ts`) — BE6 ✅
 - [ ] Initial Prisma migration (`prisma migrate dev --name init`)
-- [ ] Seed data for development
 
 ---
 
@@ -470,3 +490,4 @@ Current reports:
 - `docs/reports/2026-03-20-issues-module-implementation.md` — Issues module: CRUD, Kanban board, attachments, labels (35 tests)
 - `docs/reports/2026-03-20-notifications-module-implementation.md` — Notifications module: WebSocket gateway, REST API, event-driven (28 tests)
 - `docs/reports/2026-03-21-sprints-comments-implementation.md` — Sprints & Comments modules: lifecycle, threading, moderation, event integration (41 unit + 18 e2e tests)
+- `docs/reports/2026-03-28-infrastructure-hardening-admin-module.md` — Infrastructure hardening (helmet, CORS, caching, compression, correlation ID, DDoS protection) + Global Admin module (279 unit + 83 e2e tests)

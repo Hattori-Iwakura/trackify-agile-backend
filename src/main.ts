@@ -4,6 +4,8 @@ import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { join } from 'node:path';
+import helmet from 'helmet';
+import compression from 'compression';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -13,6 +15,19 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
+
+  // Security headers
+  app.use(helmet());
+
+  // Request body size limits
+  app.useBodyParser('json', { limit: '10mb' });
+  app.useBodyParser('urlencoded', { limit: '10mb', extended: true });
+
+  // Response compression
+  app.use(compression());
+
+  // Graceful shutdown (Docker SIGTERM handling)
+  app.enableShutdownHooks();
 
   // Static file serving for uploads (avatars, attachments)
   const uploadDir = configService.get<string>('UPLOAD_DIR', './uploads');
@@ -30,7 +45,13 @@ async function bootstrap() {
   );
 
   // CORS
-  app.enableCors();
+  const corsOrigin = configService.get<string>('CORS_ORIGIN', 'http://localhost:3000');
+  app.enableCors({
+    origin: corsOrigin.split(',').map((o) => o.trim()),
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-correlation-id'],
+  });
 
   // Swagger
   const swaggerConfig = new DocumentBuilder()

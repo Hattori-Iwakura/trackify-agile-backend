@@ -16,6 +16,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    const correlationId = request['correlationId'] || '-';
 
     const status =
       exception instanceof HttpException
@@ -29,7 +30,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error(
-        `${request.method} ${request.url}`,
+        `[${correlationId}] ${request.method} ${request.url}`,
         exception instanceof Error ? exception.stack : undefined,
       );
     }

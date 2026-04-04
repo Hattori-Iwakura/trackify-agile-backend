@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ConflictException,
   ForbiddenException,
@@ -13,6 +14,7 @@ import type { PaginationDto, PaginatedResult } from '../common/dto/pagination.dt
 
 @Injectable()
 export class MembersService {
+  private readonly logger = new Logger(MembersService.name);
   constructor(private readonly prisma: PrismaService) {}
 
   async addMember(

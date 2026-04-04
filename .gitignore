@@ -30,6 +30,9 @@ CLAUDE.md
 # Testing
 coverage/
 
+# User uploads (runtime data)
+/uploads
+
 # IDE
 .idea/
 .vscode/

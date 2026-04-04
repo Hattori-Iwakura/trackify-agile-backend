@@ -15,13 +15,14 @@ export class LoggingInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest();
     const { method, url } = request;
+    const correlationId = request['correlationId'] || '-';
     const now = Date.now();
 
     return next.handle().pipe(
       tap(() => {
         const response = context.switchToHttp().getResponse();
         this.logger.log(
-          `${method} ${url} ${response.statusCode} - ${Date.now() - now}ms`,
+          `[${correlationId}] ${method} ${url} ${response.statusCode} - ${Date.now() - now}ms`,
         );
       }),
     );

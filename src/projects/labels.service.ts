@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
@@ -11,6 +12,8 @@ import type { PaginationDto, PaginatedResult } from '../common/dto/pagination.dt
 
 @Injectable()
 export class LabelsService {
+  private readonly logger = new Logger(LabelsService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(projectId: string, dto: CreateLabelDto) {

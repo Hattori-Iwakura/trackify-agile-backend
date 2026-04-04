@@ -82,7 +82,7 @@ describe('HttpExceptionFilter', () => {
     filter.catch(exception, mockHost as any);
 
     expect(logSpy).toHaveBeenCalledWith(
-      'GET /api/test',
+      '[-] GET /api/test',
       expect.stringContaining('Unexpected crash'),
     );
   });

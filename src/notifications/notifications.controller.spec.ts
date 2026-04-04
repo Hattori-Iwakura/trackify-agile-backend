@@ -48,11 +48,11 @@ describe('NotificationsController', () => {
 
   describe('PATCH /notifications/:id/read', () => {
     it('should mark notification as read', async () => {
-      service.markAsRead.mockResolvedValue({ id: 'notif-1', read: true });
+      service.markAsRead.mockResolvedValue({ id: 'notif-1', isRead: true });
 
       const result = await controller.markAsRead('notif-1', { id: 'uuid-1' });
 
-      expect(result.read).toBe(true);
+      expect(result.isRead).toBe(true);
     });
   });
 

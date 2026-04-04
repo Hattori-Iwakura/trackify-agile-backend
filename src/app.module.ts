@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { APP_GUARD } from '@nestjs/core';
@@ -14,6 +15,7 @@ import { IssuesModule } from './issues/issues.module';
 import { SprintsModule } from './sprints/sprints.module';
 import { CommentsModule } from './comments/comments.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AdminModule } from './admin/admin.module';
 import { HealthController } from './health/health.controller';
 import { validateEnv } from './config/env.validation';
 
@@ -22,6 +24,11 @@ import { validateEnv } from './config/env.validation';
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateEnv,
+    }),
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 30000,
+      max: 100,
     }),
     ThrottlerModule.forRoot({
       throttlers: [
@@ -40,6 +47,7 @@ import { validateEnv } from './config/env.validation';
     CommentsModule,
     EventEmitterModule.forRoot(),
     NotificationsModule,
+    AdminModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

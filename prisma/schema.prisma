@@ -170,6 +170,7 @@ model Issue {
   @@unique([projectId, issueNumber])
   @@index([projectId, status])
   @@index([projectId, sprintId])
+  @@index([assigneeId])
   @@map("issues")
 }
 
@@ -199,6 +200,7 @@ model Attachment {
   issue    Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
   uploader User  @relation(fields: [uploaderId], references: [id])
 
+  @@index([issueId])
   @@map("attachments")
 }
 
@@ -217,6 +219,7 @@ model Sprint {
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   issues  Issue[]
 
+  @@index([projectId])
   @@map("sprints")
 }
 
@@ -236,6 +239,7 @@ model Comment {
   parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies Comment[] @relation("CommentReplies")
 
+  @@index([issueId])
   @@map("comments")
 }
 
@@ -253,5 +257,6 @@ model Notification {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("notifications")
 }

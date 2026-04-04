@@ -27,6 +27,7 @@ function createMockDelegate(): MockDelegate {
     createMany: jest.fn(),
     deleteMany: jest.fn(),
     updateMany: jest.fn(),
+    groupBy: jest.fn(),
   };
 }
 

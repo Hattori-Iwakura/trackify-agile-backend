@@ -204,7 +204,7 @@ describe('Comments (e2e)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('statusCode', 200);
     });
   });
 });
