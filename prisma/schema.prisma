@@ -54,6 +54,14 @@ enum SprintStatus {
   COMPLETED
 }
 
+enum IssueLinkType {
+  BLOCKS
+  IS_BLOCKED_BY
+  RELATES_TO
+  DUPLICATES
+  IS_DUPLICATED_BY
+}
+
 enum NotificationType {
   ISSUE_ASSIGNED
   ISSUE_STATUS_CHANGED
@@ -86,6 +94,7 @@ model User {
   comments       Comment[]
   notifications  Notification[]
   attachments    Attachment[]
+  issueHistory   IssueHistory[]
 
   @@map("users")
 }
@@ -166,6 +175,9 @@ model Issue {
   labels      IssueLabel[]
   attachments Attachment[]
   comments    Comment[]
+  history     IssueHistory[]
+  linksFrom   IssueLink[]    @relation("IssueLinksFrom")
+  linksTo     IssueLink[]    @relation("IssueLinksTo")
 
   @@unique([projectId, issueNumber])
   @@index([projectId, status])
@@ -237,6 +249,38 @@ model Comment {
   replies Comment[] @relation("CommentReplies")
 
   @@map("comments")
+}
+
+/// BE6: Issue field change audit trail
+model IssueHistory {
+  id          String   @id @default(uuid())
+  issueId     String
+  changedById String
+  field       String
+  oldValue    String?
+  newValue    String?
+  createdAt   DateTime @default(now())
+
+  issue     Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  changedBy User  @relation(fields: [changedById], references: [id])
+
+  @@index([issueId])
+  @@map("issue_history")
+}
+
+/// BE6: Directed link between two issues
+model IssueLink {
+  id            String        @id @default(uuid())
+  sourceIssueId String
+  targetIssueId String
+  linkType      IssueLinkType
+  createdAt     DateTime      @default(now())
+
+  sourceIssue Issue @relation("IssueLinksFrom", fields: [sourceIssueId], references: [id], onDelete: Cascade)
+  targetIssue Issue @relation("IssueLinksTo",   fields: [targetIssueId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceIssueId, targetIssueId, linkType])
+  @@map("issue_links")
 }
 
 /// BE5: Notifications (real-time via Socket.io)

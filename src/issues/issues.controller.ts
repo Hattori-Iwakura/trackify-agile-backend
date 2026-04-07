@@ -141,8 +141,9 @@ export class IssuesController {
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @Param('issueKey') issueKey: string,
     @Body(new ZodValidationPipe(UpdateIssueSchema)) dto: UpdateIssueDto,
+    @CurrentUser() user: { id: string },
   ) {
-    return this.issuesService.update(projectId, issueKey, dto);
+    return this.issuesService.update(projectId, issueKey, dto, user.id);
   }
 
   @Patch(':issueKey/status')
@@ -167,8 +168,9 @@ export class IssuesController {
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @Param('issueKey') issueKey: string,
     @Body(new ZodValidationPipe(UpdateIssueStatusSchema)) dto: UpdateIssueStatusDto,
+    @CurrentUser() user: { id: string },
   ) {
-    return this.issuesService.updateStatus(projectId, issueKey, dto.status);
+    return this.issuesService.updateStatus(projectId, issueKey, dto.status, user.id);
   }
 
   @Patch(':issueKey/reorder')

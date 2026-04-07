@@ -2,19 +2,26 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { IssuesService } from './issues.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { IssueHistoryService } from './history/issue-history.service';
 import { createMockPrismaService } from '../../test/helpers/mock-prisma.helper';
 
 describe('IssuesService', () => {
   let service: IssuesService;
   let prisma: ReturnType<typeof createMockPrismaService>;
+  let issueHistoryService: jest.Mocked<IssueHistoryService>;
 
   beforeEach(async () => {
     prisma = createMockPrismaService();
+    issueHistoryService = {
+      recordChanges: jest.fn().mockResolvedValue(undefined),
+      getHistory: jest.fn().mockResolvedValue([]),
+    } as any;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         IssuesService,
         { provide: PrismaService, useValue: prisma },
+        { provide: IssueHistoryService, useValue: issueHistoryService },
       ],
     }).compile();
 
@@ -149,19 +156,37 @@ describe('IssuesService', () => {
   });
 
   describe('update', () => {
-    it('should update issue fields', async () => {
+    const currentIssue = {
+      id: 'issue-1',
+      title: 'Old title',
+      description: null,
+      priority: 'MEDIUM',
+      type: 'TASK',
+      assigneeId: null,
+    };
+
+    it('should update issue fields and record history', async () => {
+      prisma.issue.findUnique.mockResolvedValue(currentIssue);
       prisma.issue.update.mockResolvedValue({
         id: 'issue-1',
         issueKey: 'TRK-1',
         title: 'Updated title',
       });
 
-      const result = await service.update('proj-1', 'TRK-1', { title: 'Updated title' });
+      const result = await service.update('proj-1', 'TRK-1', { title: 'Updated title' }, 'user-1');
 
       expect(result.title).toBe('Updated title');
+      expect(issueHistoryService.recordChanges).toHaveBeenCalledWith(
+        'issue-1',
+        'user-1',
+        expect.arrayContaining([
+          expect.objectContaining({ field: 'title', oldValue: 'Old title', newValue: 'Updated title' }),
+        ]),
+      );
     });
 
     it('should validate assignee when assigneeId provided', async () => {
+      prisma.issue.findUnique.mockResolvedValue(currentIssue);
       prisma.projectMember.findUnique.mockResolvedValue({ userId: 'user-1', projectId: 'proj-1' });
       prisma.issue.update.mockResolvedValue({
         id: 'issue-1',
@@ -169,56 +194,64 @@ describe('IssuesService', () => {
         assigneeId: 'user-1',
       });
 
-      await service.update('proj-1', 'TRK-1', { assigneeId: 'user-1' });
+      await service.update('proj-1', 'TRK-1', { assigneeId: 'user-1' }, 'user-1');
 
       expect(prisma.projectMember.findUnique).toHaveBeenCalled();
     });
 
-    it('should throw NotFoundException when issue not found (P2025)', async () => {
-      prisma.issue.update.mockRejectedValue({ code: 'P2025' });
+    it('should throw NotFoundException when issue not found', async () => {
+      prisma.issue.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.update('proj-1', 'TRK-999', { title: 'Nope' }),
+        service.update('proj-1', 'TRK-999', { title: 'Nope' }, 'user-1'),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should rethrow non-P2025 errors', async () => {
+    it('should rethrow update errors', async () => {
+      prisma.issue.findUnique.mockResolvedValue(currentIssue);
       const error = new Error('DB connection lost');
       prisma.issue.update.mockRejectedValue(error);
 
       await expect(
-        service.update('proj-1', 'TRK-1', { title: 'Nope' }),
+        service.update('proj-1', 'TRK-1', { title: 'Nope' }, 'user-1'),
       ).rejects.toThrow('DB connection lost');
     });
   });
 
   describe('updateStatus', () => {
-    it('should transition status', async () => {
+    it('should transition status and record history', async () => {
+      prisma.issue.findUnique.mockResolvedValue({ id: 'issue-1', status: 'TODO' });
       prisma.issue.update.mockResolvedValue({
         id: 'issue-1',
         issueKey: 'TRK-1',
         status: 'IN_PROGRESS',
       });
 
-      const result = await service.updateStatus('proj-1', 'TRK-1', 'IN_PROGRESS');
+      const result = await service.updateStatus('proj-1', 'TRK-1', 'IN_PROGRESS', 'user-1');
 
       expect(result.status).toBe('IN_PROGRESS');
+      expect(issueHistoryService.recordChanges).toHaveBeenCalledWith(
+        'issue-1',
+        'user-1',
+        [{ field: 'status', oldValue: 'TODO', newValue: 'IN_PROGRESS' }],
+      );
     });
 
-    it('should throw NotFoundException when issue not found (P2025)', async () => {
-      prisma.issue.update.mockRejectedValue({ code: 'P2025' });
+    it('should throw NotFoundException when issue not found', async () => {
+      prisma.issue.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.updateStatus('proj-1', 'TRK-999', 'DONE'),
+        service.updateStatus('proj-1', 'TRK-999', 'DONE', 'user-1'),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should rethrow non-P2025 errors', async () => {
+    it('should rethrow update errors', async () => {
+      prisma.issue.findUnique.mockResolvedValue({ id: 'issue-1', status: 'TODO' });
       const error = new Error('DB error');
       prisma.issue.update.mockRejectedValue(error);
 
       await expect(
-        service.updateStatus('proj-1', 'TRK-1', 'DONE'),
+        service.updateStatus('proj-1', 'TRK-1', 'DONE', 'user-1'),
       ).rejects.toThrow('DB error');
     });
   });

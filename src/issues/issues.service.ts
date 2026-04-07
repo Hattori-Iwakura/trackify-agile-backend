@@ -13,12 +13,16 @@ import type { QueryIssuesDto } from './dto/query-issues.dto';
 import type { ReorderIssueDto } from './dto/reorder-issue.dto';
 import type { PaginatedResult } from '../common/dto/pagination.dto';
 import type { IssueStatus } from '../../generated/prisma/enums';
+import { IssueHistoryService } from './history/issue-history.service';
 
 @Injectable()
 export class IssuesService {
   private readonly logger = new Logger(IssuesService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly issueHistoryService: IssueHistoryService,
+  ) {}
 
   async create(projectId: string, dto: CreateIssueDto, reporterId: string) {
     return this.prisma.$transaction(async (tx) => {
@@ -151,16 +155,40 @@ export class IssuesService {
     return issue;
   }
 
-  async update(projectId: string, issueKey: string, dto: UpdateIssueDto) {
+  async update(projectId: string, issueKey: string, dto: UpdateIssueDto, changedById: string) {
     const issueNumber = parseIssueKey(issueKey);
 
     if (dto.assigneeId) {
       await this.validateAssignee(dto.assigneeId, projectId);
     }
 
-    try {
-      return await this.prisma.issue.update({
-        where: { projectId_issueNumber: { projectId, issueNumber } },
+    const current = await this.prisma.issue.findUnique({
+      where: { projectId_issueNumber: { projectId, issueNumber } },
+      select: { id: true, title: true, description: true, priority: true, type: true, assigneeId: true },
+    });
+
+    if (!current) {
+      throw new NotFoundException({
+        message: `Issue '${issueKey}' not found`,
+        errorCode: ErrorCode.ISSUE_KEY_NOT_FOUND,
+      });
+    }
+
+    const changes: Array<{ field: string; oldValue: string | null; newValue: string | null }> = [];
+    if (dto.title !== undefined && dto.title !== current.title)
+      changes.push({ field: 'title', oldValue: current.title, newValue: dto.title });
+    if (dto.description !== undefined && dto.description !== current.description)
+      changes.push({ field: 'description', oldValue: current.description ?? null, newValue: dto.description ?? null });
+    if (dto.priority !== undefined && dto.priority !== current.priority)
+      changes.push({ field: 'priority', oldValue: current.priority, newValue: dto.priority });
+    if (dto.type !== undefined && dto.type !== current.type)
+      changes.push({ field: 'type', oldValue: current.type, newValue: dto.type });
+    if (dto.assigneeId !== undefined && dto.assigneeId !== current.assigneeId)
+      changes.push({ field: 'assigneeId', oldValue: current.assigneeId ?? null, newValue: dto.assigneeId ?? null });
+
+    const [updated] = await Promise.all([
+      this.prisma.issue.update({
+        where: { id: current.id },
         data: {
           title: dto.title,
           description: dto.description,
@@ -173,38 +201,44 @@ export class IssuesService {
           reporter: { select: { id: true, fullName: true, email: true } },
           labels: { include: { label: true } },
         },
-      });
-    } catch (error) {
-      if (error?.code === 'P2025') {
-        throw new NotFoundException({
-          message: `Issue '${issueKey}' not found`,
-          errorCode: ErrorCode.ISSUE_KEY_NOT_FOUND,
-        });
-      }
-      throw error;
-    }
+      }),
+      this.issueHistoryService.recordChanges(current.id, changedById, changes),
+    ]);
+
+    return updated;
   }
 
-  async updateStatus(projectId: string, issueKey: string, status: IssueStatus) {
+  async updateStatus(projectId: string, issueKey: string, status: IssueStatus, changedById: string) {
     const issueNumber = parseIssueKey(issueKey);
 
-    try {
-      return await this.prisma.issue.update({
-        where: { projectId_issueNumber: { projectId, issueNumber } },
+    const current = await this.prisma.issue.findUnique({
+      where: { projectId_issueNumber: { projectId, issueNumber } },
+      select: { id: true, status: true },
+    });
+
+    if (!current) {
+      throw new NotFoundException({
+        message: `Issue '${issueKey}' not found`,
+        errorCode: ErrorCode.ISSUE_KEY_NOT_FOUND,
+      });
+    }
+
+    const [updated] = await Promise.all([
+      this.prisma.issue.update({
+        where: { id: current.id },
         data: { status },
         include: {
           assignee: { select: { id: true, fullName: true, email: true } },
         },
-      });
-    } catch (error) {
-      if (error?.code === 'P2025') {
-        throw new NotFoundException({
-          message: `Issue '${issueKey}' not found`,
-          errorCode: ErrorCode.ISSUE_KEY_NOT_FOUND,
-        });
-      }
-      throw error;
-    }
+      }),
+      current.status !== status
+        ? this.issueHistoryService.recordChanges(current.id, changedById, [
+            { field: 'status', oldValue: current.status, newValue: status },
+          ])
+        : Promise.resolve(),
+    ]);
+
+    return updated;
   }
 
   async remove(projectId: string, issueKey: string) {

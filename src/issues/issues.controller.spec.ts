@@ -78,7 +78,7 @@ describe('IssuesController', () => {
     it('should update status', async () => {
       service.updateStatus.mockResolvedValue({ issueKey: 'TRK-1', status: 'DONE' });
 
-      const result = await controller.updateStatus('proj-1', 'TRK-1', { status: 'DONE' });
+      const result = await controller.updateStatus('proj-1', 'TRK-1', { status: 'DONE' }, { id: 'user-1' });
 
       expect(result.status).toBe('DONE');
     });
