@@ -20,20 +20,20 @@ export class MembersService {
     dto: AddMemberDto,
     callerRole: ProjectRole,
   ) {
-    // Verify user exists
+    // Lookup user by email
     const user = await this.prisma.user.findUnique({
-      where: { id: dto.userId },
+      where: { email: dto.email },
     });
     if (!user) {
       throw new NotFoundException({
-        message: 'User not found',
+        message: 'No user found with that email address',
         errorCode: ErrorCode.USER_NOT_FOUND,
       });
     }
 
     // Check not already a member
     const existing = await this.prisma.projectMember.findUnique({
-      where: { userId_projectId: { userId: dto.userId, projectId } },
+      where: { userId_projectId: { userId: user.id, projectId } },
     });
     if (existing) {
       throw new ConflictException({
@@ -47,7 +47,7 @@ export class MembersService {
 
     return this.prisma.projectMember.create({
       data: {
-        userId: dto.userId,
+        userId: user.id,
         projectId,
         role: dto.role,
       },

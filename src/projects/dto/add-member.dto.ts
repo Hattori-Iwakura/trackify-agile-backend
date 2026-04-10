@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ProjectRole } from '../../../generated/prisma/enums';
 
 export const AddMemberSchema = z.object({
-  userId: z.string().uuid(),
+  email: z.string().email(),
   role: z.nativeEnum(ProjectRole).default(ProjectRole.MEMBER),
 });
 
