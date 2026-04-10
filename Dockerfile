@@ -41,7 +41,10 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY package.json ./
 COPY prisma ./prisma
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
+    && mkdir -p uploads/avatars uploads/attachments \
+    && chown -R appuser:appgroup uploads
+
 USER appuser
 
 EXPOSE 3000
