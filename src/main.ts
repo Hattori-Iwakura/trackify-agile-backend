@@ -15,8 +15,15 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   // Static file serving for uploads (avatars, attachments)
+  // Cross-Origin-Resource-Policy: cross-origin allows Vercel frontend to load images from Railway
   const uploadDir = configService.get<string>('UPLOAD_DIR', './uploads');
-  app.useStaticAssets(join(process.cwd(), uploadDir), { prefix: '/uploads/' });
+  app.useStaticAssets(join(process.cwd(), uploadDir), {
+    prefix: '/uploads/',
+    setHeaders: (res) => {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    },
+  });
 
   // Global prefix
   const apiPrefix = configService.get<string>('API_PREFIX', 'api');
