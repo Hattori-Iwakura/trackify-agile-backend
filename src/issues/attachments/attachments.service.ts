@@ -30,7 +30,7 @@ export class AttachmentsService {
     return this.prisma.attachment.create({
       data: {
         filename: file.originalname.replace(/[/\\]/g, '_').slice(0, 255),
-        url: file.path,
+        url: `/uploads/attachments/${file.filename}`,
         mimeType: file.mimetype,
         size: file.size,
         issueId: issue.id,

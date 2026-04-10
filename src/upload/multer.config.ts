@@ -13,7 +13,7 @@ export function createMulterOptions(
   allowedMimeTypes: string[] = DEFAULT_ALLOWED_MIME_TYPES,
 ): MulterOptions {
   const mimeTypeSet = new Set(allowedMimeTypes);
-  const uploadDir = process.env.UPLOAD_DIR || '/tmp/uploads';
+  const uploadDir = process.env.UPLOAD_DIR || './uploads';
   const destination = join(uploadDir, subDir);
 
   mkdirSync(destination, { recursive: true });

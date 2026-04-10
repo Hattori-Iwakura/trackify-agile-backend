@@ -29,9 +29,10 @@ describe('AttachmentsService', () => {
     it('should create attachment record with file metadata', async () => {
       const file = {
         originalname: 'doc.pdf',
+        filename: 'b70941d0-fba6-4a63-960c-5db7f4fddc6a.pdf',
         mimetype: 'application/pdf',
         size: 2048,
-        path: '/uploads/attachments/doc.pdf',
+        path: '/tmp/uploads/attachments/b70941d0-fba6-4a63-960c-5db7f4fddc6a.pdf',
       } as Express.Multer.File;
 
       prisma.issue.findUnique.mockResolvedValue({ id: 'issue-1' });

@@ -16,7 +16,7 @@ async function bootstrap() {
 
   // Static file serving for uploads (avatars, attachments)
   // Cross-Origin-Resource-Policy: cross-origin allows Vercel frontend to load images from Railway
-  const uploadDir = configService.get<string>('UPLOAD_DIR', '/tmp/uploads');
+  const uploadDir = configService.get<string>('UPLOAD_DIR', './uploads');
   app.useStaticAssets(join(process.cwd(), uploadDir), {
     prefix: '/uploads/',
     setHeaders: (res) => {
