@@ -41,7 +41,7 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY package.json ./
 COPY prisma ./prisma
 
-RUN mkdir -p uploads/avatars uploads/attachments
+RUN mkdir -p /tmp/uploads/avatars /tmp/uploads/attachments
 
 EXPOSE 3000
 
