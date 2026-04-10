@@ -15,7 +15,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN npx prisma generate && npm run build
+RUN npx prisma generate \
+    && (test -f generated/prisma/package.json || (mkdir -p generated/prisma && echo '{"type":"module"}' > generated/prisma/package.json)) \
+    && npm run build
 
 # ---- Stage 3: Production dependencies only ----
 FROM node:20-alpine AS prod-deps
@@ -44,4 +46,4 @@ USER appuser
 
 EXPOSE 3000
 
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]

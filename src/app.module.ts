@@ -25,9 +25,9 @@ import { validateEnv } from './config/env.validation';
     }),
     ThrottlerModule.forRoot({
       throttlers: [
-        { name: 'short', ttl: 1000, limit: 3 },
-        { name: 'medium', ttl: 10000, limit: 20 },
-        { name: 'long', ttl: 60000, limit: 100 },
+        { name: 'short',  ttl: 1000,  limit: 30  },
+        { name: 'medium', ttl: 10000, limit: 100 },
+        { name: 'long',   ttl: 60000, limit: 300 },
       ],
     }),
     PrismaModule,
@@ -39,7 +39,8 @@ import { validateEnv } from './config/env.validation';
     SprintsModule,
     CommentsModule,
     EventEmitterModule.forRoot(),
-    NotificationsModule,
+    NotificationsModule, // JwtModule now uses registerAsync — gateway verifies tokens correctly
+
   ],
   controllers: [AppController, HealthController],
   providers: [
