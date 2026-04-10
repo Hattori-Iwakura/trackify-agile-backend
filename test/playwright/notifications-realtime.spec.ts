@@ -134,7 +134,7 @@ test.beforeAll(async () => {
 
   // 7. User A invite User B vào project (để B có thể post comment)
   await delay(500);
-  const inv = await apiPost(`/projects/${projectId}/members`, { userId: userBId, role: 'MEMBER' }, tokenA);
+  const inv = await apiPost(`/projects/${projectId}/members`, { email: EMAIL_B, role: 'MEMBER' }, tokenA);
   if (inv?.statusCode >= 400) throw new Error(`Invite B failed: ${JSON.stringify(inv)}`);
 
   // 8. User A tạo issue (A = reporter)
